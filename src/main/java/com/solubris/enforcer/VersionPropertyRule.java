@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.solubris.StreamSugar.prepend;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -173,11 +174,9 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
     }
 
     private static Stream<Artifact> scanPlugins(Stream<Plugin> plugins, String type) {
-        return plugins.flatMap(plugin ->
-                Stream.concat(
-                        Stream.of(new Artifact(plugin, type)),
-                        scanDependencies(pluginDependencies(plugin), type + "-dependency")
-                ));
+        return plugins.flatMap(p ->
+                prepend(new Artifact(p, type), scanDependencies(pluginDependencies(p), type + "-dependency"))
+        );
     }
 
     /**
