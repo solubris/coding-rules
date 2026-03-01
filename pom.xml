@@ -16,7 +16,8 @@
         <!--suppress XmlUnresolvedReference -->
         <skipChecks>${skipTests}</skipChecks>
 
-        <pmd.version>7.19.0</pmd.version>
+        <pmd.version>7.22.0</pmd.version>
+        <junit.version>6.0.3</junit.version>
     </properties>
 
     <dependencies>
@@ -64,13 +65,13 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>6.0.3</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-commons</artifactId>
-            <version>6.0.3</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
