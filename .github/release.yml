@@ -1,0 +1,21 @@
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+
+changelog:
+  categories:
+    - title: 🏕 New Features
+      labels:
+        - '*'
+      exclude:
+        labels:
+          - maven
+          - bug
+          - documentation
+    - title: 🐞 Bug Fixes
+      labels:
+        - bug
+    - title: 📔 Documentation
+      labels:
+        - documentation
+    - title: 👒 Dependencies
+      labels:
+        - maven

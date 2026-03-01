@@ -1,0 +1,28 @@
+root = true
+
+[*.java]
+ij_java_names_count_to_use_import_on_demand = 999
+ij_java_class_count_to_use_import_on_demand = 999
+
+# to align with checkstyle: JavadocTagContinuationIndentation
+ij_java_doc_indent_on_continuation = true
+# White space config that seems to be different from the default
+ij_java_space_after_colon = true
+ij_java_space_before_colon = true
+ij_java_spaces_around_equality_operators = true
+
+# trying to avoid annotations on same-line
+ij_java_generate_use_type_annotation_before_type = false
+
+# avoid use of "Impl" classes
+ij_java_subclass_name_prefix = Default
+ij_java_subclass_name_suffix =
+
+# Promote use of Class:cast, Class::isInstanceOf
+ij_java_replace_instanceof_and_cast = true
+
+# Reduce random blank lines
+ij_java_keep_blank_lines_before_right_brace = 0
+ij_java_keep_blank_lines_between_package_declaration_and_header = 1
+ij_java_keep_blank_lines_in_code = 1
+ij_java_keep_blank_lines_in_declarations = 1
