@@ -21,6 +21,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -259,38 +260,44 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
             canonicalCounts.put(canonical, canonicalCounts.getOrDefault(canonical, 0) + count);
         }
 
-        Stream.Builder<String> violations = Stream.builder();
+        return canonicalCounts.entrySet().stream()
+                .peek(e -> logArtefactVersion(e.getKey(), e.getValue(), canonicalRepresentative.get(e.getKey()), versionLocations))
+                .map(entry -> {
+                    String key = entry.getKey();
+                    if (key.startsWith("ver:")) {
+                        return checkExplicitVersion(versionLocations, entry.getValue(), canonicalRepresentative, key);
+                    } else if (key.startsWith("prop:")) {
+                        return checkProperty(key, definedProperties, entry.getValue());
+                    }
+                    return null;
+                }).filter(Objects::nonNull);
+    }
 
-        // Now evaluate violations based on canonical counts
-        for (Map.Entry<String, Integer> entry : canonicalCounts.entrySet()) {
-            String key = entry.getKey();
-            int count = entry.getValue();
+    private static String checkProperty(String key, Map<String, String> definedProperties, int count) {
+        if (count > 1) return null;
 
-            getLog().debug("[VersionPropertyRule DEBUG] canonical='" + key + "' count=" + count + " repr='" + canonicalRepresentative.get(key) + "' locations='" + versionLocations.getOrDefault(canonicalRepresentative.get(key), java.util.Collections.emptyList()) + "'");
+        String propName = key.substring(5);
+        String propValue = definedProperties.getOrDefault(propName, "?");
+        return String.format(
+                "Version property '${%s}' (value: %s) is used but appears only once. " +
+                        "Remove the property and use the version directly, or ensure it's used in multiple places.",
+                propName, propValue);
+    }
 
-            if (key.startsWith("ver:")) {
-                String literal = canonicalRepresentative.get(key);
-                List<String> locs = versionLocations.getOrDefault(literal, java.util.Collections.emptyList());
-                if (count > 1 && requirePropertiesForDuplicates) {
-                    violations.add(String.format(
-                            "Version '%s' appears %d times but is not using a property. Create a property and reference it in all occurrences. Locations: %s",
-                            literal, count, locs));
-                }
-            } else if (key.startsWith("prop:")) {
-                String propName = key.substring(5);
-                int occurrences = entry.getValue();
-                // If the property is only used once (even if declared), it's redundant
-                if (occurrences == 1) {
-                    String propValue = definedProperties.get(propName);
-                    violations.add(String.format(
-                            "Version property '${%s}' (value: %s) is used but appears only once. " +
-                                    "Remove the property and use the version directly, or ensure it's used in multiple places.",
-                            propName, propValue != null ? propValue : "?"));
-                }
-            }
+    private String checkExplicitVersion(Map<String, List<String>> versionLocations, int count, Map<String, String> canonicalRepresentative, String key) {
+        if (count > 1 && requirePropertiesForDuplicates) {
+            String literal = canonicalRepresentative.get(key);
+            List<String> locs = versionLocations.getOrDefault(literal, Collections.emptyList());
+            return String.format(
+                    "Version '%s' appears %d times but is not using a property. Create a property and reference it in all occurrences. Locations: %s",
+                    literal, count, locs);
         }
+        return null;
+    }
 
-        return violations.build();
+    private void logArtefactVersion(String key, Integer count, String representative, Map<String, List<String>> versionLocations) {
+        List<String> orDefault = versionLocations.getOrDefault(representative, Collections.emptyList());
+        getLog().debug("[VersionPropertyRule DEBUG] canonical='" + key + "' count=" + count + " repr='" + representative + "' locations='" + orDefault + "'");
     }
 
     /**
