@@ -3,6 +3,7 @@ package com.solubris.enforcer;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.model.Extension;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginManagement;
@@ -32,7 +33,15 @@ public class ModelStubber {
         return result;
     }
 
-    static void withAllTypes(Model model, Supplier<String> versionProvider) {
+    public static Extension extensionOf(String groupId, String artifactId, String version) {
+        Extension result = new Extension();
+        result.setGroupId(groupId);
+        result.setArtifactId(artifactId);
+        result.setVersion(version);
+        return result;
+    }
+
+    public static void withAllTypes(Model model, Supplier<String> versionProvider) {
         model.addDependency(dependencyOf("junit", "junit", versionProvider.get()));
         DependencyManagement dependencyManagement = new DependencyManagement();
         dependencyManagement.addDependency(dependencyOf("org.junit.jupiter", "junit-jupiter-api", versionProvider.get()));
@@ -41,6 +50,7 @@ public class ModelStubber {
         plugin.addDependency(dependencyOf("org.apache.maven", "maven-plugin-api", versionProvider.get()));
         Build build = new Build();
         build.addPlugin(plugin);
+        build.addExtension(extensionOf("org.apache.maven", "maven-core-extension", versionProvider.get()));
         PluginManagement pluginManagement = new PluginManagement();
         pluginManagement.addPlugin(pluginOf("org.apache.maven.plugins", "maven-surefire-plugin", versionProvider.get()));
         build.setPluginManagement(pluginManagement);

@@ -3,9 +3,11 @@ package com.solubris.enforcer;
 import org.apache.maven.enforcer.rule.api.AbstractEnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Build;
 import org.apache.maven.model.BuildBase;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.model.Extension;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.ModelBase;
 import org.apache.maven.model.Plugin;
@@ -87,12 +89,13 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
     }
 
     protected Stream<String> scanAll() {
-        // TODO scan build extensions
+        // TODO scan reporting
         Stream.Builder<Stream<Artifact>> result = Stream.builder();
         result.add(scanDependencies(directDependencies(model), "direct-dependency"));
         result.add(scanDependencies(managedDependencies(model), "managed-dependency"));
         result.add(scanPlugins(directPlugins(model), "direct-plugin"));
         result.add(scanPlugins(managedPlugins(model), "managed-plugin"));
+        result.add(scanExtensions(extensions(model), "extension"));
         result.add(scanProfiles(model));
 
         Map<String, List<String>> versionLocations = result.build()
@@ -112,6 +115,13 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
     private static Stream<Dependency> managedDependencies(ModelBase model) {
         return Optional.ofNullable(model.getDependencyManagement())
                 .map(DependencyManagement::getDependencies)
+                .stream()
+                .flatMap(Collection::stream);
+    }
+
+    private static Stream<Extension> extensions(Model model) {
+        return Optional.ofNullable(model.getBuild())
+                .map(Build::getExtensions)
                 .stream()
                 .flatMap(Collection::stream);
     }
@@ -177,6 +187,10 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
         return plugins.flatMap(p ->
                 prepend(new Artifact(p, type), scanDependencies(pluginDependencies(p), type + "-dependency"))
         );
+    }
+
+    private static Stream<Artifact> scanExtensions(Stream<Extension> extensions, String type) {
+        return extensions.map(dep -> new Artifact(dep, type));
     }
 
     /**
