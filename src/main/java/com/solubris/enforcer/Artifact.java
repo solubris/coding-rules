@@ -67,4 +67,12 @@ public class Artifact {
         String profilePart = profile != null ? String.format(" (profile: %s)", profile) : "";
         return String.format("%s: %s:%s(%s)%s", type, groupId, artifactId, managed ? "managed" : "direct", profilePart);
     }
+
+    public static Artifact direct(Dependency dependency) {
+        return new Artifact(dependency, false, null);
+    }
+
+    public static Artifact managed(Dependency dependency) {
+        return new Artifact(dependency, false, null);
+    }
 }

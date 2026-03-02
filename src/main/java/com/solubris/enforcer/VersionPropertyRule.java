@@ -92,8 +92,8 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
 
     protected Stream<String> scanAll() {
         Stream.Builder<Stream<Artifact>> result = Stream.builder();
-        result.add(directDependencies(model).map(dep -> new Artifact(dep, false, null)));
-        result.add(managedDependencies(model).map(dep -> new Artifact(dep, true, null)));
+        result.add(directDependencies(model).map(Artifact::direct));
+        result.add(managedDependencies(model).map(Artifact::managed));
         result.add(scanPlugins(directPlugins(model), false, null));
         result.add(scanPlugins(managedPlugins(model), true, null));
         result.add(reportPlugins(model).map(Artifact::new));
