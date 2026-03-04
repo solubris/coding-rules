@@ -16,11 +16,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 class BomImportScopeRuleTest {
-
     private final Model model = new Model();
     private final BomImportScopeRule rule = new BomImportScopeRule(model);
 
-    /* default */ BomImportScopeRuleTest() {
+    BomImportScopeRuleTest() {
         rule.setLog(mock(EnforcerLogger.class));
     }
 

@@ -11,10 +11,13 @@ import org.apache.maven.project.MavenProject;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Stream;
+
+import static java.text.MessageFormat.format;
+import static java.util.stream.Collectors.joining;
+import static org.apache.maven.artifact.ArtifactUtils.key;
 
 /**
  * A custom Maven Enforcer rule that ensures all dependencies declared with
@@ -32,7 +35,6 @@ import java.util.stream.Stream;
  */
 @Named("bomImportScopeRule")
 public class BomImportScopeRule extends AbstractEnforcerRule {
-
     private static final String POM_TYPE = "pom";
     private static final String IMPORT_SCOPE = "import";
 
@@ -56,16 +58,14 @@ public class BomImportScopeRule extends AbstractEnforcerRule {
 
     @Override
     public void execute() throws EnforcerRuleException {
-        List<String> violations = scanAll().collect(Collectors.toList());
-
-        if (!violations.isEmpty()) {
-            String message = violations.stream()
-                    .map(v -> "  - " + v)
-                    .collect(Collectors.joining("\n",
-                            "BOM dependencies (type=pom) must use scope=import. "
-                                    + "Found " + violations.size() + " violation(s):\n",
-                            "\n"));
-            throw new EnforcerRuleException(message);
+        LongAdder count = new LongAdder();
+        String body = scanAll()
+                .peek(v -> count.increment())
+                .map(v -> "  - " + v)
+                .collect(joining("\n", "", "\n"));
+        if (count.longValue() > 0) {
+            String title = "BOM dependencies (type=pom) must use scope=import. Found " + count.sum() + " violation(s):";
+            throw new EnforcerRuleException(title + "\n" + body);
         }
 
         getLog().info("All BOM dependencies (type=pom) correctly use scope=import.");
@@ -100,8 +100,7 @@ public class BomImportScopeRule extends AbstractEnforcerRule {
     private static String formatViolation(Dependency dep, String section) {
         String scope = dep.getScope();
         String scopeInfo = (scope == null || scope.isEmpty()) ? "no scope" : "scope=" + scope;
-        return dep.getGroupId() + ":" + dep.getArtifactId() + ":" + dep.getVersion()
-                + " in <" + section + "> has type=pom but " + scopeInfo
-                + " (expected scope=import)";
+        String key = key(dep.getGroupId(), dep.getArtifactId(), dep.getVersion());
+        return format("{0} in <{1}> has type=pom but {2} (expected scope=import)", key, section, scopeInfo);
     }
 }
