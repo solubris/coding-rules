@@ -86,8 +86,9 @@
             <!-- Ignore @Nested -->
             <property name="ignoredAnnotations"
                       value="android.support.annotation.VisibleForTesting,co.elastic.clients.util.VisibleForTesting,com.google.common.annotations.VisibleForTesting,org.junit.jupiter.api.AfterAll,org.junit.jupiter.api.AfterEach,org.junit.jupiter.api.BeforeAll,org.junit.jupiter.api.BeforeEach,org.junit.jupiter.params.ParameterizedTest,junit.extensions.RepeatedTest,org.junit.jupiter.api.Test,org.junit.jupiter.api.TestFactory,org.junit.jupiter.api.TestTemplate,org.junit.jupiter.api.extension.RegisterExtension,org.junit.jupiter.api.Nested,com.intuit.karate.junit5.Karate.Test,com.intuit.karate.junit5.Karate"/>
-            <!-- ignore test related methods -->
-            <!-- TODO ignore constructors of test classes -->
+            <!-- Exclude test classes - ideally would have separate rules for main and test -->
+            <property name="violationSuppressXPath"
+                      value=".[ancestor-or-self::ClassDeclaration[matches(@SimpleName, '^(Test|IT).*$|^[A-Z][a-zA-Z0-9]*Test(s|Case)?$|^[A-Z][a-zA-Z0-9]*IT(Case)?$')]]"/>
             <property name="regex" value="\/\*\s*(default|package)\s*\*\/"/>
         </properties>
     </rule>
