@@ -7,10 +7,12 @@ import org.apache.maven.model.Model;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -28,6 +30,7 @@ import static java.util.stream.Collectors.toList;
 @Named("unusedPropertyRule")
 public class UnusedPropertyRule extends AbstractEnforcerRule {
     private static final Pattern PROPERTY_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
+    protected static final String SUPPRESSIONS_PROPERTY = "unusedPropertyRule.suppressions";
 
     private final Model originalModel;
     private final Model effectiveModel;
@@ -66,14 +69,26 @@ public class UnusedPropertyRule extends AbstractEnforcerRule {
 //                .filter(artifact -> !isExcluded(artifact.getVersion()))
                 .collect(groupingBy(ArtifactV2::getVersion, toList()));
 
+        String property = originalModel.getProperties().getProperty(SUPPRESSIONS_PROPERTY);
+        Set<String> suppressed = parseSuppressedPropertyList(property);
+
         return originalModel.getProperties().entrySet().stream()
                 .filter(UnusedPropertyRule::isVersionProperty) // only check properties that look like versions
+                .filter(e -> !suppressed.contains(e.getKey().toString()))
                 .map(e -> {
                     String propName = e.getKey().toString();
                     String propValue = e.getValue() != null ? e.getValue().toString() : "";
                     List<ArtifactV2> artifacts = byVersion.getOrDefault("${" + propName + "}", Collections.emptyList());
                     return artifacts.isEmpty() ? unusedUseViolation(propName, propValue) : null;
                 }).filter(Objects::nonNull);
+    }
+
+    private static Set<String> parseSuppressedPropertyList(String raw) {
+        if (raw == null || raw.isBlank()) return Collections.emptySet();
+        return Arrays.stream(raw.split("[,\\s]+"))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
     }
 
     private static boolean isVersionProperty(Map.Entry<Object, Object> e) {
