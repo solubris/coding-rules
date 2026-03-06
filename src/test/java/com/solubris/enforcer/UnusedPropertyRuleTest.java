@@ -16,6 +16,7 @@ import static com.solubris.enforcer.ModelStubber.dependencyOf;
 import static com.solubris.enforcer.ModelStubber.extensionOf;
 import static com.solubris.enforcer.ModelStubber.pluginOf;
 import static com.solubris.enforcer.ModelStubber.reportPluginOf;
+import static com.solubris.enforcer.UnusedPropertyRule.SUPPRESSIONS_PROPERTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -146,6 +147,16 @@ class UnusedPropertyRuleTest {
                 .contains("old-lib.version")
                 .contains("2.0.0")
                 .contains("unused");
+    }
+
+    @Test
+    void suppressedUnusedPropertyIsIgnored() {
+        originalModel.addProperty(SUPPRESSIONS_PROPERTY, "old-lib.version, kept-for-compat.version");
+        originalModel.addProperty("old-lib.version", "2.0.0");
+
+        Stream<String> violations = rule.scanProperties();
+
+        assertThat(violations).isEmpty();
     }
 
     @Test
