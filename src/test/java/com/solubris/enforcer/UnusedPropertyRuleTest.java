@@ -45,7 +45,7 @@ class UnusedPropertyRuleTest {
 
         effectiveModel.addDependency(dependencyOf("org.junit", "junit", "5.9.3"));
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations).isEmpty();
     }
@@ -61,7 +61,7 @@ class UnusedPropertyRuleTest {
         effectiveDepMgmt.addDependency(dependencyOf("org.junit", "junit", "5.9.3"));
         effectiveModel.setDependencyManagement(effectiveDepMgmt);
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations).isEmpty();
     }
@@ -77,7 +77,7 @@ class UnusedPropertyRuleTest {
         effectiveBuild.addPlugin(pluginOf("org.apache.maven.plugins", "maven-compiler-plugin", "3.13.0"));
         effectiveModel.setBuild(effectiveBuild);
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations).isEmpty();
     }
@@ -97,7 +97,7 @@ class UnusedPropertyRuleTest {
         effectiveBuild.setPluginManagement(effectivePluginMgmt);
         effectiveModel.setBuild(effectiveBuild);
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations).isEmpty();
     }
@@ -113,7 +113,7 @@ class UnusedPropertyRuleTest {
         effectiveBuild.addExtension(extensionOf("org.example", "my-extension", "1.0.0"));
         effectiveModel.setBuild(effectiveBuild);
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations).isEmpty();
     }
@@ -129,7 +129,7 @@ class UnusedPropertyRuleTest {
         effectiveReporting.addPlugin(reportPluginOf("org.apache.maven.plugins", "maven-site-plugin", "4.0.0"));
         effectiveModel.setReporting(effectiveReporting);
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations).isEmpty();
     }
@@ -138,7 +138,7 @@ class UnusedPropertyRuleTest {
     void unusedVersionPropertyFails() {
         originalModel.addProperty("old-lib.version", "2.0.0");
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations)
                 .hasSize(1)
@@ -154,7 +154,7 @@ class UnusedPropertyRuleTest {
         originalModel.addProperty(SUPPRESSIONS_PROPERTY, "old-lib.version, kept-for-compat.version");
         originalModel.addProperty("old-lib.version", "2.0.0");
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations).isEmpty();
     }
@@ -163,7 +163,7 @@ class UnusedPropertyRuleTest {
     void nonVersionPropertyIsIgnored() {
         originalModel.addProperty("project.build.sourceEncoding", "UTF-8");
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations).isEmpty();
     }
@@ -176,7 +176,7 @@ class UnusedPropertyRuleTest {
 
         effectiveModel.addDependency(dependencyOf("org.junit", "junit", "5.9.3"));
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations)
                 .hasSize(1)
@@ -188,7 +188,7 @@ class UnusedPropertyRuleTest {
         originalModel.addProperty("lib-a.version", "1.0.0");
         originalModel.addProperty("lib-b.version", "2.0.0");
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations)
                 .hasSize(2)
@@ -229,7 +229,7 @@ class UnusedPropertyRuleTest {
         effectiveBuild.addPlugin(effectivePlugin);
         effectiveModel.setBuild(effectiveBuild);
 
-        Stream<String> violations = rule.scanProperties();
+        Stream<String> violations = rule.scan();
 
         assertThat(violations).isEmpty();
     }

@@ -24,8 +24,8 @@ public class ModelScanner {
     private ModelScanner() {
     }
 
-    static Stream<ArtifactV2> scanModel(Model model) {
-        Stream.Builder<Stream<ArtifactV2>> result = Stream.builder();
+    static Stream<Artifact> scanModel(Model model) {
+        Stream.Builder<Stream<Artifact>> result = Stream.builder();
         result.add(directDependencies(model));
         result.add(managedDependencies(model));
         result.add(scanPlugins(directPlugins(model), false, null));
@@ -37,35 +37,35 @@ public class ModelScanner {
                 .flatMap(identity());
     }
 
-    private static Stream<ArtifactV2> directDependencies(ModelBase model) {
+    private static Stream<Artifact> directDependencies(ModelBase model) {
         return Optional.ofNullable(model.getDependencies())
                 .stream()
                 .flatMap(Collection::stream)
-                .map(ArtifactV2::direct);
+                .map(Artifact::direct);
     }
 
-    private static Stream<ArtifactV2> managedDependencies(ModelBase model) {
+    private static Stream<Artifact> managedDependencies(ModelBase model) {
         return Optional.ofNullable(model.getDependencyManagement())
                 .map(DependencyManagement::getDependencies)
                 .stream()
                 .flatMap(Collection::stream)
-                .map(ArtifactV2::managed);
+                .map(Artifact::managed);
     }
 
-    private static Stream<ArtifactV2> extensions(Model model) {
+    private static Stream<Artifact> extensions(Model model) {
         return Optional.ofNullable(model.getBuild())
                 .map(Build::getExtensions)
                 .stream()
                 .flatMap(Collection::stream)
-                .map(ArtifactV2::new);
+                .map(Artifact::new);
     }
 
-    private static Stream<ArtifactV2> reportPlugins(ModelBase model) {
+    private static Stream<Artifact> reportPlugins(ModelBase model) {
         return Optional.ofNullable(model.getReporting())
                 .map(Reporting::getPlugins)
                 .stream()
                 .flatMap(Collection::stream)
-                .map(ArtifactV2::new);
+                .map(Artifact::new);
     }
 
     private static Stream<Plugin> managedPlugins(Model model) {
@@ -104,14 +104,14 @@ public class ModelScanner {
                 .flatMap(Collection::stream);
     }
 
-    private static Stream<ArtifactV2> scanProfiles(Model model) {
+    private static Stream<Artifact> scanProfiles(Model model) {
         if (model.getProfiles() == null) return Stream.empty();
 
         return model.getProfiles().stream()
                 .flatMap(profile -> {
                     // TODO what if the property is in the profile?
                     String profileId = profile.getId();
-                    Stream.Builder<Stream<ArtifactV2>> result = Stream.builder();
+                    Stream.Builder<Stream<Artifact>> result = Stream.builder();
                     result.add(directDependencies(profile));
                     result.add(managedDependencies(profile));
                     result.add(scanPlugins(directPlugins(profile), false, profileId));
@@ -127,9 +127,9 @@ public class ModelScanner {
      * TODO Should plugin dependencies show as a different type than regular dependencies?
      * TODO Consider whether plugin dependencies should be considered "managed" when the plugin is managed.
      */
-    private static Stream<ArtifactV2> scanPlugins(Stream<Plugin> items, boolean managed, String profile) {
+    private static Stream<Artifact> scanPlugins(Stream<Plugin> items, boolean managed, String profile) {
         return items.flatMap(p ->
-                prepend(new ArtifactV2(p, managed, profile), pluginDependencies(p).map(d -> new ArtifactV2(d, managed, profile)))
+                prepend(new Artifact(p, managed, profile), pluginDependencies(p).map(d -> new Artifact(d, managed, profile)))
         );
     }
 

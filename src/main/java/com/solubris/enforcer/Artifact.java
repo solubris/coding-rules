@@ -1,65 +1,46 @@
 package com.solubris.enforcer;
 
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.With;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Extension;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.ReportPlugin;
 
+@Builder(toBuilder = true, setterPrefix = "with")
+@RequiredArgsConstructor
+@Getter
 public class Artifact {
     private final String version;
     private final String artifactId;
     private final String groupId;
     private final String type;      // dependency, plugin, parent, etc.
     private final boolean managed;  // whether the version is from dependencyManagement or pluginManagement
+    @With
     private final String profile;
-
-    public Artifact(String version, String artifactId, String groupId, String type, boolean managed, String profile) {
-        this.version = version;
-        this.artifactId = artifactId;
-        this.groupId = groupId;
-        this.type = type;
-        this.managed = managed;
-        this.profile = profile;
-    }
+    @With
+    private final String effectiveVersion; // version after resolution, may be null if not resolved yet
 
     public Artifact(Dependency dependency, boolean managed, String profile) {
-        this(dependency.getVersion(), dependency.getArtifactId(), dependency.getGroupId(), "Dependency", managed, profile);
+        this(dependency.getVersion(), dependency.getArtifactId(), dependency.getGroupId(), "Dependency", managed, profile, null);
     }
 
     public Artifact(Plugin plugin, boolean managed, String profile) {
-        this(plugin.getVersion(), plugin.getArtifactId(), plugin.getGroupId(), "Plugin", managed, profile);
+        this(plugin.getVersion(), plugin.getArtifactId(), plugin.getGroupId(), "Plugin", managed, profile, null);
     }
 
     public Artifact(ReportPlugin plugin) {
-        this(plugin.getVersion(), plugin.getArtifactId(), plugin.getGroupId(), "ReportPlugin", false, null);
+        this(plugin.getVersion(), plugin.getArtifactId(), plugin.getGroupId(), "ReportPlugin", false, null, null);
     }
 
     public Artifact(ReportPlugin plugin, String profile) {
-        this(plugin.getVersion(), plugin.getArtifactId(), plugin.getGroupId(), "ReportPlugin", false, profile);
+        this(plugin.getVersion(), plugin.getArtifactId(), plugin.getGroupId(), "ReportPlugin", false, profile, null);
     }
 
     public Artifact(Extension extension) {
-        this(extension.getVersion(), extension.getArtifactId(), extension.getGroupId(), "Extension", false, null);
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public boolean isManaged() {
-        return managed;
-    }
-
-    public String getArtifactId() {
-        return artifactId;
-    }
-
-    public String getGroupId() {
-        return groupId;
+        this(extension.getVersion(), extension.getArtifactId(), extension.getGroupId(), "Extension", false, null, null);
     }
 
     @Override
@@ -68,11 +49,21 @@ public class Artifact {
         return String.format("%s: %s:%s(%s)%s", type, groupId, artifactId, managed ? "managed" : "direct", profilePart);
     }
 
+    public String fullKey() {
+        String profilePart = profile != null ? profile : "";
+        return String.format("%s:%s:%s:%s:%s", type, groupId, artifactId, managed ? "managed" : "direct", profilePart);
+    }
+
     public static Artifact direct(Dependency dependency) {
         return new Artifact(dependency, false, null);
     }
 
     public static Artifact managed(Dependency dependency) {
-        return new Artifact(dependency, false, null);
+        return new Artifact(dependency, true, null);
+    }
+
+    public String key() {
+        // TODO can use versionlessKey()
+        return groupId + ":" + artifactId;
     }
 }
