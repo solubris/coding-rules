@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 import static com.solubris.StreamSugar.prepend;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -81,16 +82,86 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
     @Override
     public void execute() throws EnforcerRuleException {
         LongAdder count = new LongAdder();
-        String message = scanAll()
+        String message = Stream.concat(scanProperties(), scanUsages())
                 .map(v -> "  - " + v)
                 .peek(v -> count.increment())
-                .collect(Collectors.joining("\n", "Version property violations found:\n", "\n"));
+                .collect(joining("\n", "Version property violations found:\n", "\n"));
         if (count.longValue() > 0) {
             throw new EnforcerRuleException(message);
         }
     }
 
-    protected Stream<String> scanAll() {
+    protected Stream<String> scanProperties() {
+        Map<String, List<Artifact>> byKey = scanModel(project.getModel())
+                .collect(Collectors.groupingBy(Artifact::fullKey, toList()));
+        Stream<Artifact> resolved = scanModel(model)
+                .map(a -> a.withEffectiveVersion(byKey.get(a.fullKey()).get(0).getVersion()));
+
+        Map<String, List<Artifact>> byVersion = resolved
+//                .filter(a -> a.getEffectiveVersion() != null)
+//                .filter(artifact -> !isExcluded(artifact.getVersion()))
+                .collect(groupingBy(Artifact::getVersion, toList()));
+
+        return model.getProperties().entrySet().stream()
+                .filter(e -> e.getKey().toString().endsWith(".version")) // only check properties that look like versions
+                .map(e -> {
+                    String propName = e.getKey().toString();
+                    String propValue = e.getValue() != null ? e.getValue().toString() : "";
+                    List<Artifact> artifacts = byVersion.getOrDefault("${" + propName + "}", Collections.emptyList());
+                    if (artifacts.size() == 0) {
+                        return unusedUseViolation(propName, propValue);
+                    } else if (artifacts.size() == 1) {
+                        // property is only used once, but there may be other occurrences of the same version that don't use the property
+                        // XXX is this check covered by scanUsages()?
+                        // find the usages of the literal version -
+                        artifacts = byVersion.getOrDefault(propValue, Collections.emptyList());
+                        if (artifacts.isEmpty()) return singleUseViolation(propName, propValue);
+                        // if there are multiple occurrences of the same version, then it would be picked up by scanUsages()
+                        // don't like this branch - maybe it is covered by scanUsages() and we can remove it from here?
+                        // Which means that scanProperties() is only for unused properties
+                        // And I like this - maybe suitable as a separate rule - UnusedVersionPropertyRule
+                        // How to know if it is covered by scanUsages()
+                        // property is used only once
+                        // and either there are no other occurrences of the same version - scanUsages() - redundantPropertyViolation() should cover it
+                        // or there are other occurrences but they all use the property - covered by scanUsages()
+                        // so yes, can remove this branch
+                    }
+                    return null;
+                }).filter(Objects::nonNull);
+    }
+
+
+    protected Stream<String> scanUsages() {
+        Map<String, List<Artifact>> byKey = scanModel(project.getModel())
+                .collect(Collectors.groupingBy(Artifact::fullKey, toList()));
+        Map<String, List<Artifact>> usages = scanModel(model)
+                .map(a -> a.withEffectiveVersion(byKey.get(a.fullKey()).get(0).getVersion()))
+                .filter(a -> a.getEffectiveVersion() != null)
+                .filter(artifact -> !isExcluded(artifact.getVersion()))
+                .collect(groupingBy(Artifact::getEffectiveVersion, toList()));
+
+
+        // byVersion maps from property to list of artifacts
+        // now can go through property keys and check usage
+
+        return usages.entrySet().stream()
+                .map(e -> {
+                    String version = e.getKey();
+                    List<Artifact> artifacts = e.getValue();
+                    long propertyCount = artifacts.stream()
+                            .filter(a -> !Objects.equals(a.getVersion(), a.getEffectiveVersion()))
+                            .count();
+                    if (artifacts.size() > 1) {
+                        if (propertyCount == 0) return missingPropertyViolation(version, artifacts);
+                        if (propertyCount < artifacts.size()) return unusedPropertyViolation(version, artifacts);
+                    } else if (artifacts.size() == 1) {
+                        if (propertyCount == 1) return redundantPropertyViolation(version, artifacts.get(0));
+                    }
+                    return null;
+                }).filter(Objects::nonNull);
+    }
+
+    private static Stream<Artifact> scanModel(Model model) {
         Stream.Builder<Stream<Artifact>> result = Stream.builder();
         result.add(directDependencies(model));
         result.add(managedDependencies(model));
@@ -99,42 +170,8 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
         result.add(reportPlugins(model));
         result.add(extensions(model));
         result.add(scanProfiles(model));
-
-        // The version resolve seems to work,
-        // but need to build the version mappings first
-        // or could resolve using the artifact type
-        // not sure which way is better
-        // just get it working with this resolve and see how the usage of the resolve goes
-
-        Stream<Artifact> resolved = result.build()
-                .flatMap(identity())
-                .map(a -> a.resolve(project));
-
-        Map<String, List<Artifact>> byVersion = resolved
-                .filter(a -> a.getEffectiveVersion() != null)
-                .filter(artifact -> !isExcluded(artifact.getVersion()))
-                .collect(groupingBy(Artifact::getVersion, toList()));
-
-        // byVersion maps from property to list of artifacts
-        // now can go through property keys and check usage
-
-        return model.getProperties().entrySet().stream()
-                .filter(e -> e.getKey().toString().endsWith(".version")) // only check properties that look like versions
-                .map(e -> {
-                    String propName = e.getKey().toString();
-                    String propValue = e.getValue() != null ? e.getValue().toString() : "";
-                    List<Artifact> artifacts = byVersion.getOrDefault("${" + propName + "}", Collections.emptyList());
-                    if (artifacts.size() < 2) {
-                        return singleUseViolation(propName, propValue);
-                    }
-                    return null;
-                }).filter(Objects::nonNull);
-
-//        Map<String, List<String>> versionLocations = resolved
-//                .filter(artifact -> !isExcluded(artifact.getVersion()))
-//                .collect(groupingBy(Artifact::getVersion, mapping(Artifact::toString, toList())));
-//
-//        return checkUsage(versionLocations);
+        return result.build()
+                .flatMap(identity());
     }
 
     private static Stream<Artifact> directDependencies(ModelBase model) {
@@ -315,12 +352,59 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
         return singleUseViolation(propName, propValue);
     }
 
+    /**
+     * TODO properties could be unused because they only override a parent property.
+     * Overriding a parent will actually override the version of that dependency,
+     * so its a valid use of a property.
+     * Perhaps could also check the parent's for mention of the property.
+     * If it's not used in the parents, then it's definitely unused.
+     *
+     * <p>Another approach could be to just log a warning in this case.
+     */
+    private static String unusedUseViolation(String propName, String propValue) {
+        return String.format(
+                "Version property '${%s}' (value: %s) is unused. " +
+                        "Check if it overrides a property from the parent, otherwise remove it.",
+                propName, propValue);
+    }
+
     private static String singleUseViolation(String propName, String propValue) {
         return String.format(
                 "Version property '${%s}' (value: %s) is used but appears only once. " +
                         "Remove the property and use the version directly, or ensure it's used in multiple places.",
                 propName, propValue);
     }
+
+    private static String redundantPropertyViolation(String version, Artifact artifact) {
+        return String.format(
+                "Version property '${%s}' (value: %s) is only used once. " +
+                        "Please inline the property version.",
+                artifact.getVersion(), artifact.getEffectiveVersion());
+    }
+
+    private static String unusedPropertyViolation(String version, List<Artifact> artifacts) {
+        String unused = artifacts.stream()
+                .filter(a -> Objects.equals(a.getVersion(), a.getEffectiveVersion()))
+                .map(Artifact::key)
+                .collect(joining(", "));
+        return String.format(
+                "Version property '${%s}' (value: %s) exists but it not used everywhere. " +
+                        "Unused locations: %s",
+                version, version, unused);  // TODO version is not right here
+    }
+
+    private static String missingPropertyViolation(String version, List<Artifact> artifacts) {
+        String unused = artifacts.stream()
+                .filter(a -> Objects.equals(a.getVersion(), a.getEffectiveVersion()))
+                .map(Artifact::key)
+                .collect(joining(", "));
+        return String.format(
+                "Version '${%s}' exists in multiple locations, please extract a version property. " +
+                        "Unused locations: %s",
+                version, unused);
+    }
+
+
 
     private String checkExplicitVersion(Map<String, List<String>> versionLocations, int count, Map<String, String> canonicalRepresentative, String key) {
         if (count > 1 && requirePropertiesForDuplicates) {

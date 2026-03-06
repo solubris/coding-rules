@@ -4,18 +4,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
-import org.apache.maven.artifact.ArtifactUtils;
-import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Extension;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.ReportPlugin;
-import org.apache.maven.project.MavenProject;
-
-import java.util.List;
-import java.util.Map;
-
-import static java.util.stream.Collectors.toMap;
 
 @Builder(toBuilder = true, setterPrefix = "with")
 @RequiredArgsConstructor
@@ -57,6 +49,11 @@ public class Artifact {
         return String.format("%s: %s:%s(%s)%s", type, groupId, artifactId, managed ? "managed" : "direct", profilePart);
     }
 
+    public String fullKey() {
+        String profilePart = profile != null ? profile : "";
+        return String.format("%s:%s:%s:%s:%s", type, groupId, artifactId, managed ? "managed" : "direct", profilePart);
+    }
+
     public static Artifact direct(Dependency dependency) {
         return new Artifact(dependency, false, null);
     }
@@ -68,54 +65,5 @@ public class Artifact {
     public String key() {
         // TODO can use versionlessKey()
         return groupId + ":" + artifactId;
-    }
-
-    public Artifact resolve(MavenProject project) {
-        if (project == null || project.getArtifactMap() == null) return this;
-        org.apache.maven.artifact.Artifact artifact = getArtifact(project);
-        if (artifact == null) {
-            System.out.println("Failed to resolve version for " + key() + ": artifact not found in project, type: " + type);
-            return this;
-        }
-        String resolvedVersion = artifact.getVersion();
-        if (resolvedVersion != null && !resolvedVersion.equals(version)) {
-            System.out.println("Resolved version for " + key() + ": from " + version + " to " +resolvedVersion);
-            return withEffectiveVersion(resolvedVersion);
-        } else if (version.startsWith("${") && version.endsWith("}")) {
-            System.out.println("Failed to resolve version for " + key() + ": artifact not found in project, type: " + type);
-        }
-        return this;
-    }
-
-    private org.apache.maven.artifact.Artifact getArtifact(MavenProject project) {
-        org.apache.maven.artifact.Artifact result = project.getArtifactMap().get(key());
-        if (result == null) {
-            result = project.getPluginArtifactMap().get(key());
-        }
-        if (result == null) {
-            result = project.getManagedVersionMap().get(key());
-        }
-        if (result == null) {
-            result = project.getExtensionArtifactMap().get(key());
-        }
-        if (result == null) {
-            result = project.getReportArtifactMap().get(key());
-        }
-        if (result == null) {
-            result = project.getReportArtifactMap().get(key());
-        }
-        if (result == null) {
-            result = pluginDependenciesByKey(project.getModel().getBuild().getPlugins()).get(key());
-        }
-        return result;
-    }
-
-    private Map<String, org.apache.maven.artifact.Artifact> pluginDependenciesByKey(List<Plugin> plugins) {
-        return plugins.stream()
-//                .peek(p -> System.out.println("Processing plugin " + p.getGroupId() + ":" + p.getArtifactId() + " with dependencies: " + p.getDependencies().size()))
-                .flatMap(p -> p.getDependencies().stream())
-                .map(d -> new org.apache.maven.artifact.DefaultArtifact(d.getGroupId(), d.getArtifactId(), d.getVersion(), null, type, null, new DefaultArtifactHandler()))
-//                .peek(d -> System.out.println("Mapped plugin dependency to artifact: " + d.getGroupId() + ":" + d.getArtifactId() + ":" + d.getVersion()))
-                .collect(toMap(ArtifactUtils::versionlessKey, a -> a, (a1, a2) -> a1));
     }
 }

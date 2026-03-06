@@ -12,9 +12,9 @@ Split the enforcer into two rules:
     - versionUsages = group by version, ignoring explicit properties
   - for each property:
     - versionUsages.get(property.name).size() -> usages of the property
-      - if usages==1, then the property should be inlined and removed
+      - if usages==1, then the property should be inlined and removed (ALLOW_SINGLE_USE_PROPERTIES=false)
         - please replace usgae of 'property.name' with 'property.value'
-      - if usages==0, then the property should be removed
+      - if usages==0, then the property should be removed (ALLOW_UNUSED_PROPERTIES=false)
         - please remove 'property.name'
     - what about if there is a version that is the same as the property value but not using the property?
       - This should be replaced with the property as well
@@ -28,14 +28,35 @@ Split the enforcer into two rules:
             - how populate the resolved version?
             - at time of building artifact model or as an enrichment step after building the artifact model?
         - getVersionProperty() returns the property if it exists, otherwise null
-      - 
-        - if the version is used more than once, it should be replaced with the property
-        - if the version is used only once, it should be inlined and removed
+
 - one for checking repeated versions
   - if a version is repeated, it must be replaced with a property
+  - extract all artifacts from model
+  - resolve all versions to their effective versions
+  - group by effectiveVersion
+    - this ensures that property usages are grouped together with non-property usages
+    - but only for dependencies in the original model
+    - for each version:
+      - if usages>1
+        - if all usages are through a property - nothing to do
+        - if some usages are through a property and some are not - replace all non-property usages
+        - if no usages are through a property - create a new property and replace all usages with the property
+      - if usages==1
+        - if usage is through a property - remove the property (ALLOW_SINGLE_USE_PROPERTIES=false)
+        - if usage is not through a property - nothing to do
 
-- what about if there is a property but its not being used?
-  - or there is a version that is the same as the property value but not using the property?
-    - This should be replaced with the property as well
+Should these be two separate rules or one rule that handles both cases?
+what would they be called?
+- VersionPropertyEnforcerRule
+  - check the properties and their usages
+  - versionPropertySuffix = "version" (configurable)
+- VersionUsageEnforcerRule
+  - check the versions and their usages
 
+ALLOW_SINGLE_USE_PROPERTIES - applicable to both rules
+
+Feels like these rules are intrinsically linked and should be part of the same rule,
+as they both deal with the same concept of properties and their usages.
+
+Even so, can ensure the implementation is cleanly separated within the same rule
 

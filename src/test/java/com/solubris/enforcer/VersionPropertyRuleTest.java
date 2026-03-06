@@ -40,7 +40,7 @@ class VersionPropertyRuleTest {
     public void singleExplicitVersionsAllowed() {
         model.addDependency(dependencyOf("junit", "junit", "4.13.2"));
 
-        Stream<String> violations = rule.scanAll();
+        Stream<String> violations = rule.scanProperties();
 
         assertThat(violations).isEmpty();
     }
@@ -49,7 +49,7 @@ class VersionPropertyRuleTest {
     public void singleExplicitVersionsAllowedCoveringAllTypes() {
         withAllTypes(model, ModelStubber::randomVersion);
 
-        Stream<String> violations = rule.scanAll();
+        Stream<String> violations = rule.scanProperties();
 
         assertThat(violations).isEmpty();
     }
@@ -60,7 +60,7 @@ class VersionPropertyRuleTest {
         model.addProperty("junit.version", "4.13.2");
         model.addDependency(dependencyOf("junit", "junit", "${junit.version}"));
 
-        Stream<String> violations = rule.scanAll();
+        Stream<String> violations = rule.scanProperties();
 
         assertThat(violations).hasSize(1);
     }
@@ -76,7 +76,7 @@ class VersionPropertyRuleTest {
         Artifact artifact = artifactOf(dependencyOf("org.junit.jupiter", "junit-jupiter-api", "4.13.2"));
         project.setManagedVersionMap(Map.of(versionlessKey(artifact), artifact));
 
-        Stream<String> violations = rule.scanAll();
+        Stream<String> violations = rule.scanProperties();
 
         assertThat(violations).isEmpty();
     }
@@ -96,7 +96,7 @@ class VersionPropertyRuleTest {
             depMgmt.addDependency(dependencyOf("org.junit.jupiter", "junit-jupiter-api", "4.13.2"));
             model.setDependencyManagement(depMgmt);
 
-            Stream<String> violations = rule.scanAll();
+            Stream<String> violations = rule.scanProperties();
 
             assertThat(violations).hasSize(1);
         }
@@ -107,7 +107,7 @@ class VersionPropertyRuleTest {
 
             withAllTypes(model, () -> "4.13.2");
 
-            Stream<String> violations = rule.scanAll();
+            Stream<String> violations = rule.scanProperties();
 
             // TODO how to assert the multiple locations for this violation?
             assertThat(violations).hasSize(1);
@@ -122,7 +122,7 @@ class VersionPropertyRuleTest {
             depMgmt.addDependency(dependencyOf("org.junit.jupiter", "junit-jupiter-api", "4.13.2"));
             model.setDependencyManagement(depMgmt);
 
-            Stream<String> violations = rule.scanAll();
+            Stream<String> violations = rule.scanProperties();
 
             assertThat(violations).isEmpty();
         }
