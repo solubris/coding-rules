@@ -7,10 +7,15 @@ import org.apache.maven.model.Model;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -24,23 +29,37 @@ import static java.util.stream.Collectors.toList;
  * Ensures that version properties are used.
  *
  * <p>This catches the typical scenario where a dependency is removed, but the property left orphaned.
+ *
+ * <p>Suppression: add a comment on the line before the property, e.g. {@code <!-- suppress UnusedProperty -->}
  */
 @Named("unusedPropertyRule")
 public class UnusedPropertyRule extends AbstractEnforcerRule {
     private static final Pattern PROPERTY_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
+    private static final Pattern SUPPRESS_COMMENT = Pattern.compile("<!--\\s*suppress\\s+UnusedProperty\\s*-->", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PROPERTY_ELEMENT = Pattern.compile("<([a-zA-Z0-9.-]+)>");
 
     private final Model originalModel;
     private final Model effectiveModel;
+    private final Set<String> suppressedProperties;
 
     @SuppressWarnings("unused")
     @Inject
     public UnusedPropertyRule(MavenSession session) {
-        this(ModelScanner.modelFrom(session), session.getCurrentProject().getModel());
+        this(
+                ModelScanner.modelFrom(session),
+                session.getCurrentProject().getModel(),
+                parseSuppressions(session.getCurrentProject().getFile())
+        );
     }
 
     protected UnusedPropertyRule(Model originalModel, Model effectiveModel) {
+        this(originalModel, effectiveModel, Collections.emptySet());
+    }
+
+    protected UnusedPropertyRule(Model originalModel, Model effectiveModel, Set<String> suppressedProperties) {
         this.originalModel = originalModel;
         this.effectiveModel = effectiveModel;
+        this.suppressedProperties = suppressedProperties != null ? suppressedProperties : Collections.emptySet();
     }
 
     @Override
@@ -68,12 +87,50 @@ public class UnusedPropertyRule extends AbstractEnforcerRule {
 
         return originalModel.getProperties().entrySet().stream()
                 .filter(UnusedPropertyRule::isVersionProperty) // only check properties that look like versions
+                .filter(e -> !suppressedProperties.contains(e.getKey().toString()))
                 .map(e -> {
                     String propName = e.getKey().toString();
                     String propValue = e.getValue() != null ? e.getValue().toString() : "";
                     List<ArtifactV2> artifacts = byVersion.getOrDefault("${" + propName + "}", Collections.emptyList());
                     return artifacts.isEmpty() ? unusedUseViolation(propName, propValue) : null;
                 }).filter(Objects::nonNull);
+    }
+
+    /**
+     * Parses the pom file for suppression comments on the line before property elements.
+     * Format: {@code <!-- suppress UnusedProperty -->} on the line immediately before the property.
+     */
+    static Set<String> parseSuppressions(File pomFile) {
+        if (pomFile == null || !pomFile.isFile()) {
+            return Collections.emptySet();
+        }
+        try {
+            List<String> lines = Files.readAllLines(pomFile.toPath());
+            Set<String> suppressed = new HashSet<>();
+            boolean inProperties = false;
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line.contains("<properties>")) {
+                    inProperties = true;
+                    continue;
+                }
+                if (inProperties && line.contains("</properties>")) {
+                    break;
+                }
+                if (inProperties && i > 0) {
+                    var matcher = PROPERTY_ELEMENT.matcher(line);
+                    if (matcher.find() && matcher.start() == line.indexOf("<")) {
+                        String prevLine = lines.get(i - 1);
+                        if (SUPPRESS_COMMENT.matcher(prevLine).find()) {
+                            suppressed.add(matcher.group(1));
+                        }
+                    }
+                }
+            }
+            return suppressed;
+        } catch (IOException e) {
+            return Collections.emptySet();
+        }
     }
 
     private static boolean isVersionProperty(Map.Entry<Object, Object> e) {

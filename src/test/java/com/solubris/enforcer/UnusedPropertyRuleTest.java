@@ -9,7 +9,12 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginManagement;
 import org.apache.maven.model.Reporting;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.solubris.enforcer.ModelStubber.dependencyOf;
@@ -201,6 +206,36 @@ class UnusedPropertyRuleTest {
         effectiveModel.addDependency(dependencyOf("org.junit", "junit", "5.9.3"));
 
         assertThatNoException().isThrownBy(rule::execute);
+    }
+
+    @Test
+    void suppressedUnusedPropertyPasses() {
+        originalModel.addProperty("kept-for-compat.version", "1.0.0");
+        UnusedPropertyRule ruleWithSuppression = new UnusedPropertyRule(
+                originalModel, effectiveModel, Set.of("kept-for-compat.version"));
+        ruleWithSuppression.setLog(mock(EnforcerLogger.class));
+
+        Stream<String> violations = ruleWithSuppression.scanProperties();
+
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    void parseSuppressions_readsCommentFromPom(@TempDir Path tempDir) throws IOException {
+        Path pom = tempDir.resolve("pom.xml");
+        Files.writeString(pom, """
+            <project>
+                <properties>
+                    <used.version>1.0</used.version>
+                    <!-- suppress UnusedProperty -->
+                    <suppressed.version>2.0</suppressed.version>
+                </properties>
+            </project>
+            """);
+
+        Set<String> suppressed = UnusedPropertyRule.parseSuppressions(pom.toFile());
+
+        assertThat(suppressed).containsExactly("suppressed.version");
     }
 
     @Test
