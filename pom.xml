@@ -118,7 +118,7 @@
                 <!-- Index required to use enforcer rules by name -->
                 <groupId>org.eclipse.sisu</groupId>
                 <artifactId>sisu-maven-plugin</artifactId>
-                <version>0.9.0.M4</version>
+                <version>1.0.0</version>
                 <executions>
                     <execution>
                         <goals>
