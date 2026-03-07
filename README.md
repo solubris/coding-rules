@@ -61,11 +61,12 @@ as they both deal with the same concept of properties and their usages.
 
 Even so, can ensure the implementation is cleanly separated within the same rule
 
+## PMD - collect to set should normally be replace with toUnmodifiableSet(), toUnmodifiableMap(), toUnmodifiableList()
 
-## collect to set should normally be replace with toUnmodifiableSet()
+especially when the result is assigned to a final field or returned from a method
+
 eg:
-.collect(Collectors.toSet());
+                .collect(Collectors.toSet());
 replace with:
-.collect(toUnmodifiableSet());
-
+                .collect(toUnmodifiableSet());
 
