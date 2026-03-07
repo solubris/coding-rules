@@ -9,6 +9,8 @@ import org.apache.maven.model.Extension;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.ReportPlugin;
 
+import java.util.Objects;
+
 @Builder(toBuilder = true, setterPrefix = "with")
 @RequiredArgsConstructor
 @Getter
@@ -65,5 +67,13 @@ public class Artifact {
     public String key() {
         // TODO can use versionlessKey()
         return groupId + ":" + artifactId;
+    }
+
+    public boolean hasExplicitVersion() {
+        return Objects.equals(getVersion(), getEffectiveVersion());
+    }
+
+    public boolean hasImplicitVersion() {
+        return !Objects.equals(getVersion(), getEffectiveVersion());
     }
 }

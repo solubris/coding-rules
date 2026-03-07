@@ -17,6 +17,8 @@ import java.util.random.RandomGenerator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.solubris.enforcer.PropertyUtil.asPlaceHolder;
+
 public class ModelStubber {
     private static final RandomGenerator random = new Random();
 
@@ -110,9 +112,5 @@ public class ModelStubber {
         effectiveModel.addDependency(dependencyOf(groupId, artifactId, version));
         originalModel.addDependency(dependencyOf(groupId, artifactId, version));
         return this;
-    }
-
-    private static String asPlaceHolder(String version) {
-        return String.format("${%s}", version);
     }
 }

@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static com.solubris.enforcer.ModelScanner.scanModel;
+import static com.solubris.enforcer.PropertyUtil.fromPlaceHolder;
 import static com.solubris.enforcer.Violations.throwViolations;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
@@ -74,7 +75,7 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
         Map<String, List<Artifact>> byKey = scanModel(effectiveModel)
                 .collect(groupingBy(Artifact::fullKey, toList()));
         Map<String, List<Artifact>> usages = scanModel(originalModel)
-                .map(a -> a.withEffectiveVersion(getVersion(a, byKey)))
+                .map(a -> a.withEffectiveVersion(fetchVersion(a, byKey)))
                 .filter(a -> a.getEffectiveVersion() != null)
                 .filter(artifact -> !isExcluded(artifact.getVersion()))
                 .collect(groupingBy(Artifact::getEffectiveVersion, toList()));
@@ -84,22 +85,22 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
 
         return usages.entrySet().stream()
                 .map(e -> {
-                    String version = e.getKey();
+                    String effectiveVersion = e.getKey();
                     List<Artifact> artifacts = e.getValue();
                     long propertyCount = artifacts.stream()
-                            .filter(a -> !Objects.equals(a.getVersion(), a.getEffectiveVersion()))
+                            .filter(Artifact::hasImplicitVersion)
                             .count();
                     if (artifacts.size() > 1) {
-                        if (propertyCount == 0) return missingPropertyViolation(version, artifacts);
-                        if (propertyCount < artifacts.size()) return unusedPropertyViolation(version, artifacts);
+                        if (propertyCount == 0) return missingPropertyViolation(effectiveVersion, artifacts);
+                        if (propertyCount < artifacts.size()) return unusedPropertyViolation(effectiveVersion, artifacts);
                     } else if (artifacts.size() == 1) {
-                        if (propertyCount == 1) return redundantPropertyViolation(version, artifacts.get(0));
+                        if (propertyCount == 1) return redundantPropertyViolation(effectiveVersion, artifacts.get(0));
                     }
                     return null;
                 }).filter(Objects::nonNull);
     }
 
-    private String getVersion(Artifact a, Map<String, List<Artifact>> byKey) {
+    private String fetchVersion(Artifact a, Map<String, List<Artifact>> byKey) {
         List<Artifact> artifacts = byKey.getOrDefault(a.fullKey(), List.of());
         if (!artifacts.isEmpty()) return artifacts.get(0).getVersion();
         getLog().warn("Could not find artifact in effectiveModel for " + a.fullKey());
@@ -110,20 +111,32 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
         if (allowSingleUseOfProperty) return null;
 
         return String.format(
-                "Version property '%s' (value: %s) is only used once. " +
-                        "Please inline the property version.",
-                artifact.getVersion(), artifact.getEffectiveVersion());
+                "Version property %s=%s is only used once. Please inline the property version.",
+                fromPlaceHolder(version), artifact.getEffectiveVersion());
     }
 
-    private static String unusedPropertyViolation(String version, List<Artifact> artifacts) {
+    /**
+     * The artifacts could either have the explicit version or a reference to the property.
+     * Where the property represents the same version.
+     * If the property uses a different version than the explicit version,
+     * then that would be detected at the moment - could be a different violation (property value doesn't match usage).
+     *
+     * <p>Could the artifacts refer to different properties that have the same value?
+     * That's possible due to coincidental properties - another edge case to consider.
+     */
+    private static String unusedPropertyViolation(String effectiveVersion, List<Artifact> artifacts) {
         String unused = artifacts.stream()
-                .filter(a -> Objects.equals(a.getVersion(), a.getEffectiveVersion()))
+                .filter(Artifact::hasExplicitVersion)
                 .map(Artifact::key)
                 .collect(joining(", "));
+        String propertyName = artifacts.stream()
+                .filter(Artifact::hasImplicitVersion)
+                .map(Artifact::getVersion)
+                .map(PropertyUtil::fromPlaceHolder)
+                .findAny().orElse("unknown");
         return String.format(
-                "Version property '%s' (value: %s) exists but it not used everywhere. " +
-                        "Unused locations: %s",
-                version, version, unused);  // TODO version is not right here
+                "Version property %s=%s exists but is not used everywhere. Unused locations: %s",
+                propertyName, effectiveVersion, unused);
     }
 
     private String missingPropertyViolation(String version, List<Artifact> artifacts) {
