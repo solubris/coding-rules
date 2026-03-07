@@ -102,6 +102,7 @@
         <exclude name="AvoidCatchingGenericException"/>     <!-- what's wrong with catching RuntimeException? -->
         <exclude name="FinalFieldCouldBeStatic"/>           <!-- Ok for prod but not for test -->
         <exclude name="AbstractClassWithoutAnyMethod"/>     <!-- Doesn't recognise abstract classes that implement an interface -->
+        <exclude name="SimplifyBooleanReturns"/>            <!-- not good for complex if/else branches -->
     </rule>
     <rule ref="category/java/design.xml/LawOfDemeter">
         <properties>

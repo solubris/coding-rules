@@ -70,3 +70,6 @@ eg:
 replace with:
                 .collect(toUnmodifiableSet());
 
+What about this case:
+                .collect(groupingBy(Artifact::fullKey, toList()));
+

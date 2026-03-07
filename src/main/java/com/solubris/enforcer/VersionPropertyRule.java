@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.solubris.enforcer.ModelScanner.scanModel;
@@ -41,7 +40,7 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
     private final Model originalModel;
     private final Model effectiveModel;
 
-    protected boolean allowSingleUseOfProperty = false;
+    protected boolean allowSingleUseOfProperty;
     protected boolean requirePropertiesForDuplicates = true;
     protected boolean ignoreParentVersion = true;
     protected List<String> excludeVersions = new ArrayList<>();
@@ -70,15 +69,15 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
         throwViolations(scan(), "Found {0} version violation(s):");
     }
 
+    @SuppressWarnings("PMD.CollapsibleIfStatements")
     protected Stream<String> scan() {
         Map<String, List<Artifact>> byKey = scanModel(effectiveModel)
-                .collect(Collectors.groupingBy(Artifact::fullKey, toList()));
+                .collect(groupingBy(Artifact::fullKey, toList()));
         Map<String, List<Artifact>> usages = scanModel(originalModel)
                 .map(a -> a.withEffectiveVersion(getVersion(a, byKey)))
                 .filter(a -> a.getEffectiveVersion() != null)
                 .filter(artifact -> !isExcluded(artifact.getVersion()))
                 .collect(groupingBy(Artifact::getEffectiveVersion, toList()));
-
 
         // byVersion maps from property to list of artifacts
         // now can go through property keys and check usage
@@ -100,10 +99,11 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
                 }).filter(Objects::nonNull);
     }
 
-    private static String getVersion(Artifact a, Map<String, List<Artifact>> byKey) {
+    private String getVersion(Artifact a, Map<String, List<Artifact>> byKey) {
         List<Artifact> artifacts = byKey.getOrDefault(a.fullKey(), List.of());
         if (!artifacts.isEmpty()) return artifacts.get(0).getVersion();
-        return "";
+        getLog().warn("Could not find artifact in effectiveModel for " + a.fullKey());
+        return null;
     }
 
     private String redundantPropertyViolation(String version, Artifact artifact) {

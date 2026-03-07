@@ -23,7 +23,7 @@ class VersionPropertyRuleTest {
     }
 
     @Test
-    public void singleExplicitVersionsAllowedCoveringAllTypes() {
+    void singleExplicitVersionsAllowedCoveringAllTypes() {
         modelStubber.withAllTypes(ModelStubber::randomVersion);
 
         Stream<String> violations = rule.scan();
@@ -33,7 +33,7 @@ class VersionPropertyRuleTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    public void detectsSingleUseOfProperty(boolean allowed) {
+    void detectsSingleUseOfProperty(boolean allowed) {
         rule.allowSingleUseOfProperty = allowed;
         modelStubber.withDependency("junit", "junit", "junit.version", "4.13.2");
 
@@ -43,7 +43,7 @@ class VersionPropertyRuleTest {
     }
 
     @Test
-    public void multipleUseOfPropertyAllowed() {
+    void multipleUseOfPropertyAllowed() {
         modelStubber.withDependency("junit", "junit", "junit.version", "4.13.2");
         modelStubber.withDependency("org.junit.jupiter", "junit-jupiter-api", "junit.version", "4.13.2");
 
@@ -54,15 +54,15 @@ class VersionPropertyRuleTest {
 
     /**
      * XXX This detection may produce false positives if the same version string is used in multiple places,
-     * but these occurrences are not actually duplicates (e.g. different dependencies coincidentally using the same version).
+     * but these occurrences are dependencies coincidentally using the same version.
      * How to solve this?
      * Only have the groupId:artifactId to go.
-     * If the groupId matches, then we can be reasonably sure it's a duplicate. But if the groupId is different, we can't be sure.
+     * If the groupId matches, then we can be reasonably sure it's a duplicate.
      */
     @Nested
     class RequirePropertiesForDuplicates {
         @Test
-        public void multipleExplicitVersionsNotAllowed() {
+        void multipleExplicitVersionsNotAllowed() {
             modelStubber.withDependency("junit", "junit", "4.13.2");
             modelStubber.withDependency("org.junit.jupiter", "junit-jupiter-api", "4.13.2");
 
@@ -76,7 +76,7 @@ class VersionPropertyRuleTest {
         }
 
         @Test
-        public void multipleExplicitVersionsNotAllowedCoveringAllTypes() {
+        void multipleExplicitVersionsNotAllowedCoveringAllTypes() {
             modelStubber.withAllTypes(() -> "4.13.2");
 
             Stream<String> violations = rule.scan();
@@ -86,7 +86,7 @@ class VersionPropertyRuleTest {
         }
 
         @Test
-        public void multipleExplicitVersionsAllowedWhenDisabled() {
+        void multipleExplicitVersionsAllowedWhenDisabled() {
             rule.requirePropertiesForDuplicates = false;
 
             modelStubber.withDependency("junit", "junit", "4.13.2");
