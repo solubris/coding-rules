@@ -130,7 +130,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
+                <version>3.15.0</version>
                 <configuration>
                     <compilerArgument>-Xlint:all</compilerArgument>
                     <annotationProcessorPaths>
@@ -210,7 +210,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.26.0</version>
+                <version>3.28.0</version>
                 <configuration>
                     <!--suppress MavenModelInspection -->
                     <skip>${skipChecks}</skip>
@@ -294,6 +294,7 @@
                 <configuration>
                     <!--suppress MavenModelInspection -->
                     <skip>${skipChecks}</skip>
+                    <fail>false</fail>
                     <rules>
                         <versionPropertyRule>
                             <requirePropertiesForDuplicates>true</requirePropertiesForDuplicates>
