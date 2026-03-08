@@ -114,7 +114,7 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
      * That's possible due to coincidental properties - another edge case to consider.
      */
     private static String unusedProperty(String effectiveVersion, List<Artifact> artifacts) {
-        String unused = artifacts.stream()
+        String explicitVersionLocations = artifacts.stream()
                 .filter(Artifact::hasExplicitVersion)
                 .map(Artifact::key)
                 .collect(joining(", "));
@@ -125,7 +125,7 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
                 .findAny().orElse("unknown");
         return String.format(
                 "Version property %s=%s exists but is not used everywhere. Unused locations: %s",
-                propertyName, effectiveVersion, unused);
+                propertyName, effectiveVersion, explicitVersionLocations);
     }
 
     private String missingProperty(String version, List<Artifact> artifacts) {
