@@ -11,7 +11,9 @@ import org.apache.maven.model.PluginManagement;
 import org.apache.maven.model.ReportPlugin;
 import org.apache.maven.model.Reporting;
 
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.random.RandomGenerator;
 import java.util.stream.Collectors;
@@ -20,6 +22,7 @@ import java.util.stream.Stream;
 import static com.solubris.enforcer.PropertyUtil.asPlaceHolder;
 
 public class ModelStubber {
+    private static final Set<String> previouslyGeneratedVersions = new HashSet<>();
     private static final RandomGenerator random = new Random();
 
     private final Model originalModel;
@@ -82,10 +85,19 @@ public class ModelStubber {
         effectiveModel.setBuild(build);
     }
 
+    /**
+     * Generates a random version string that has not been generated before, to avoid false positives in tests.
+     */
     public static String randomVersion() {
-        return Stream.generate(() -> String.valueOf(random.nextInt(10)))
-                .limit(3)
-                .collect(Collectors.joining("."));
+        String result;
+
+        do {
+            result = Stream.generate(() -> String.valueOf(random.nextInt(10)))
+                    .limit(3)
+                    .collect(Collectors.joining("."));
+        } while (!previouslyGeneratedVersions.add(result));
+
+        return result;
     }
 
     @CanIgnoreReturnValue
