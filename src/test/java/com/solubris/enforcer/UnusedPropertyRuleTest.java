@@ -25,10 +25,10 @@ import static org.mockito.Mockito.mock;
 class UnusedPropertyRuleTest {
     private final Model originalModel = new Model();
     private final Model effectiveModel = new Model();
-    private final UnusedPropertyRule rule;
+    private final UnusedPropertyRule rule = new UnusedPropertyRule(originalModel, effectiveModel);
+    private final ModelStubber stubber = new ModelStubber(originalModel, effectiveModel);
 
     UnusedPropertyRuleTest() {
-        this.rule = new UnusedPropertyRule(originalModel, effectiveModel);
         rule.setLog(mock(EnforcerLogger.class));
     }
 
@@ -39,10 +39,7 @@ class UnusedPropertyRuleTest {
 
     @Test
     void versionPropertyUsedByDirectDependencyPasses() {
-        originalModel.addProperty("junit.version", "5.9.3");
-        originalModel.addDependency(dependencyOf("org.junit", "junit", "${junit.version}"));
-
-        effectiveModel.addDependency(dependencyOf("org.junit", "junit", "5.9.3"));
+        stubber.withDependency("org.junit", "junit", "junit.version", "4.13.2");
 
         Stream<String> violations = rule.scan();
 
@@ -64,9 +61,14 @@ class UnusedPropertyRuleTest {
 
         assertThat(violations).isEmpty();
     }
+//    <groupId>org.jacoco</groupId>
+//    <artifactId>jacoco-maven-plugin</artifactId>
 
     @Test
     void versionPropertyUsedByPluginPasses() {
+        stubber.withDependency("junit", "junit", "junit.version", "4.13.2");
+        stubber.withDependency("org.junit.jupiter", "junit-jupiter-api", "junit.version", "4.13.2");
+
         originalModel.addProperty("compiler.version", "3.13.0");
         Build originalBuild = new Build();
         originalBuild.addPlugin(pluginOf("apache.maven.plugins", "maven-compiler-plugin", "${compiler.version}"));
