@@ -19,6 +19,9 @@
         <unusedPropertyRule.suppressions>junit.version,kept-for-compat.version</unusedPropertyRule.suppressions>
         <pmd.version>7.22.0</pmd.version>
         <junit.version>6.0.3</junit.version>
+        <project.junit.version>6.0.3</project.junit.version>
+
+        <sonar.organization>solubris</sonar.organization>
     </properties>
 
     <dependencies>
@@ -300,6 +303,7 @@
                             <requirePropertiesForDuplicates>true</requirePropertiesForDuplicates>
                         </versionPropertyRule>
                         <bomImportScopeRule/>
+                        <unusedPropertyRule/>
                     </rules>
                 </configuration>
                 <executions>
