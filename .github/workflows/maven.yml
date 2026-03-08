@@ -48,6 +48,83 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         pr-number: ${{ steps.pr.outputs.number }}
         checks-name: "Autograding GitHub Action"
+        config: >
+          {
+            "tests": {
+              "name": "JUnit Tests",
+              "id": "tests",
+              "tools": [
+                {
+                  "id": "junit",
+                  "name": "Unit Tests",
+                  "pattern": "**/target/*-reports/TEST*.xml"
+                }
+              ],
+              "failureRateImpact": -1,
+              "maxScore": 100
+            },
+            "analysis": [
+              {
+                "name": "Style",
+                "id": "style",
+                "tools": [
+                  {
+                    "id": "checkstyle",
+                    "pattern": "**/target/**checkstyle-result.xml"
+                  },
+                  {
+                    "id": "pmd",
+                    "pattern": "**/target/pmd-*/pmd.xml"
+                  }
+                ],
+                "errorImpact": -1,
+                "highImpact": -1,
+                "normalImpact": -1,
+                "lowImpact": -1,
+                "maxScore": 100
+              },
+              {
+                "name": "Bugs",
+                "id": "bugs",
+                "icon": "bug",
+                "tools": [
+                  {
+                    "id": "spotbugs",
+                    "sourcePath": "src/main/java",
+                    "pattern": "**/target/spotbugsXml.xml"
+                  }
+                ],
+                "errorImpact": -3,
+                "highImpact": -3,
+                "normalImpact": -3,
+                "lowImpact": -3,
+                "maxScore": 100
+              }
+            ],
+            "coverage": [
+              {
+                "name": "Code Coverage",
+                "tools": [
+                  {
+                    "id": "jacoco",
+                    "name": "Line Coverage",
+                    "metric": "line",
+                    "sourcePath": "src/main/java",
+                    "pattern": "**/target/site/jacoco/jacoco.xml"
+                  },
+                  {
+                    "id": "jacoco",
+                    "name": "Branch Coverage",
+                    "metric": "branch",
+                    "sourcePath": "src/main/java",
+                    "pattern": "**/target/site/jacoco/jacoco.xml"
+                  }
+                ],
+                "maxScore": 100,
+                "missedPercentageImpact": -1
+              }
+            ]
+          }
 
 # back to automatic sonar scan
 # org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
