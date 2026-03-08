@@ -69,11 +69,11 @@ class UnusedPropertyRuleTest {
     void versionPropertyUsedByPluginPasses() {
         originalModel.addProperty("compiler.version", "3.13.0");
         Build originalBuild = new Build();
-        originalBuild.addPlugin(pluginOf("org.apache.maven.plugins", "maven-compiler-plugin", "${compiler.version}"));
+        originalBuild.addPlugin(pluginOf("apache.maven.plugins", "maven-compiler-plugin", "${compiler.version}"));
         originalModel.setBuild(originalBuild);
 
         Build effectiveBuild = new Build();
-        effectiveBuild.addPlugin(pluginOf("org.apache.maven.plugins", "maven-compiler-plugin", "3.13.0"));
+        effectiveBuild.addPlugin(pluginOf("apache.maven.plugins", "maven-compiler-plugin", "3.13.0"));
         effectiveModel.setBuild(effectiveBuild);
 
         Stream<String> violations = rule.scan();
@@ -86,13 +86,13 @@ class UnusedPropertyRuleTest {
         originalModel.addProperty("compiler.version", "3.13.0");
         Build originalBuild = new Build();
         PluginManagement originalPluginMgmt = new PluginManagement();
-        originalPluginMgmt.addPlugin(pluginOf("org.apache.maven.plugins", "maven-compiler-plugin", "${compiler.version}"));
+        originalPluginMgmt.addPlugin(pluginOf("apache.maven.plugins", "maven-compiler-plugin", "${compiler.version}"));
         originalBuild.setPluginManagement(originalPluginMgmt);
         originalModel.setBuild(originalBuild);
 
         Build effectiveBuild = new Build();
         PluginManagement effectivePluginMgmt = new PluginManagement();
-        effectivePluginMgmt.addPlugin(pluginOf("org.apache.maven.plugins", "maven-compiler-plugin", "3.13.0"));
+        effectivePluginMgmt.addPlugin(pluginOf("apache.maven.plugins", "maven-compiler-plugin", "3.13.0"));
         effectiveBuild.setPluginManagement(effectivePluginMgmt);
         effectiveModel.setBuild(effectiveBuild);
 
@@ -121,11 +121,11 @@ class UnusedPropertyRuleTest {
     void versionPropertyUsedByReportPluginPasses() {
         originalModel.addProperty("site.version", "4.0.0");
         Reporting originalReporting = new Reporting();
-        originalReporting.addPlugin(reportPluginOf("org.apache.maven.plugins", "maven-site-plugin", "${site.version}"));
+        originalReporting.addPlugin(reportPluginOf("apache.maven.plugins", "maven-site-plugin", "${site.version}"));
         originalModel.setReporting(originalReporting);
 
         Reporting effectiveReporting = new Reporting();
-        effectiveReporting.addPlugin(reportPluginOf("org.apache.maven.plugins", "maven-site-plugin", "4.0.0"));
+        effectiveReporting.addPlugin(reportPluginOf("apache.maven.plugins", "maven-site-plugin", "4.0.0"));
         effectiveModel.setReporting(effectiveReporting);
 
         Stream<String> violations = rule.scan();
