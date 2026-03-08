@@ -22,6 +22,9 @@
         <project.junit.version>6.0.3</project.junit.version>
 
         <sonar.organization>solubris</sonar.organization>
+        <sonar.java.checkstyle.reportPaths>${project.build.directory}/checkstyle-result.xml</sonar.java.checkstyle.reportPaths>
+        <sonar.java.pmd.reportPaths>${project.build.directory}/pmd.xml</sonar.java.pmd.reportPaths>
+        <sonar.java.spotbugs.reportPaths>${project.build.directory}/spotbugsXml.xml</sonar.java.spotbugs.reportPaths>
     </properties>
 
     <dependencies>
@@ -144,6 +147,26 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
