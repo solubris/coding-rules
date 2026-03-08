@@ -45,12 +45,11 @@ class UnusedPropertyRuleTest {
 
         assertThat(violations).isEmpty();
     }
-//    <groupId>org.jacoco</groupId>
-//    <artifactId>jacoco-maven-plugin</artifactId>
 
     @Test
     void versionPropertyUsedByPluginPasses() {
         stubber.withPlugin("apache.maven.plugins", "maven-compiler-plugin", "compiler.version", "3.13.0");
+        stubber.withManagedPlugin("org.jacoco", "jacoco-maven-plugin", "jacoco.version", "0.8.12");
 
         Stream<String> violations = rule.scan();
 

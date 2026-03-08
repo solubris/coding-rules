@@ -124,7 +124,7 @@ public class UnusedPropertyRule extends AbstractEnforcerRule {
      */
     private static String unusedUseViolation(String propName, String propValue) {
         return String.format(
-                "Version property '${%s}' (value: %s) is unused. " +
+                "Version property %s=%s is unused. " +
                         "Check if it overrides a property from the parent, otherwise remove it.",
                 propName, propValue);
     }

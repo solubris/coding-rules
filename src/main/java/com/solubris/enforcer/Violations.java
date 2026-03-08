@@ -9,6 +9,9 @@ import java.util.stream.Stream;
 import static java.util.stream.Collectors.joining;
 
 public class Violations {
+    private Violations() {
+    }
+
     public static void throwViolations(Stream<String> violations, String titleFormat) throws EnforcerRuleException {
         LongAdder count = new LongAdder();
         String body = violations

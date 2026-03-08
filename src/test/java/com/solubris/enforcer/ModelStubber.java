@@ -142,11 +142,11 @@ public class ModelStubber {
 
     @CanIgnoreReturnValue
     public ModelStubber withPlugin(String groupId, String artifactId, String version, String effectiveVersion) {
-        Build build = new Build();
+        Build build = buildFrom(effectiveModel);
         build.addPlugin(pluginOf(groupId, artifactId, effectiveVersion));
         effectiveModel.setBuild(build);
 
-        build = new Build();
+        build = buildFrom(originalModel);
         build.addPlugin(pluginOf(groupId, artifactId, asPlaceHolder(version)));
         originalModel.setBuild(build);
         originalModel.addProperty(version, effectiveVersion);
@@ -156,11 +156,59 @@ public class ModelStubber {
 
     @CanIgnoreReturnValue
     public ModelStubber withPlugin(String groupId, String artifactId, String version) {
-        Build build = new Build();
+        Build build = buildFrom(effectiveModel);
         build.addPlugin(pluginOf(groupId, artifactId, version));
         effectiveModel.setBuild(build);
-        build = new Build();
-        build.addPlugin(pluginOf(groupId, artifactId, asPlaceHolder(version)));
+        build = buildFrom(originalModel);
+        build.addPlugin(pluginOf(groupId, artifactId, version));
+        originalModel.setBuild(build);
+
+        return this;
+    }
+
+    @CanIgnoreReturnValue
+    public ModelStubber withManagedPlugin(String groupId, String artifactId, String version, String effectiveVersion) {
+        PluginManagement pluginManagement = new PluginManagement();
+        pluginManagement.addPlugin(pluginOf(groupId, artifactId, effectiveVersion));
+        Build build = buildFrom(effectiveModel);
+        build.setPluginManagement(pluginManagement);
+        effectiveModel.setBuild(build);
+
+        pluginManagement = new PluginManagement();
+        pluginManagement.addPlugin(pluginOf(groupId, artifactId, asPlaceHolder(version)));
+        build = buildFrom(originalModel);
+        build.setPluginManagement(pluginManagement);
+        originalModel.setBuild(build);
+        originalModel.addProperty(version, effectiveVersion);
+
+        return this;
+    }
+
+    private static Build buildFrom(Model model) {
+        return coalesce(model.getBuild(), new Build());
+    }
+
+    @SafeVarargs
+    private static <T> T coalesce(T... t) {
+        for (T candidate : t) {
+            if (candidate != null) return candidate;
+        }
+
+        return null;
+    }
+
+    @CanIgnoreReturnValue
+    public ModelStubber withManagedPlugin(String groupId, String artifactId, String version) {
+        PluginManagement pluginManagement = new PluginManagement();
+        pluginManagement.addPlugin(pluginOf(groupId, artifactId, version));
+        Build build = buildFrom(effectiveModel);
+        build.setPluginManagement(pluginManagement);
+        effectiveModel.setBuild(build);
+
+        pluginManagement = new PluginManagement();
+        pluginManagement.addPlugin(pluginOf(groupId, artifactId, version));
+        build = buildFrom(originalModel);
+        build.setPluginManagement(pluginManagement);
         originalModel.setBuild(build);
 
         return this;
