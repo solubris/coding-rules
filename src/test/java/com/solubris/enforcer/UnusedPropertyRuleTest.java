@@ -15,6 +15,7 @@ import static com.solubris.enforcer.UnusedPropertyRule.SUPPRESSIONS_PROPERTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchException;
 import static org.mockito.Mockito.mock;
 
 class UnusedPropertyRuleTest {
@@ -106,11 +107,8 @@ class UnusedPropertyRuleTest {
 
     @Test
     void multiplePropertiesMixedUsage() {
-        originalModel.addProperty("junit.version", "5.9.3");
         originalModel.addProperty("old-lib.version", "2.0.0");
-        originalModel.addDependency(dependencyOf("org.junit", "junit", "${junit.version}"));
-
-        effectiveModel.addDependency(dependencyOf("org.junit", "junit", "5.9.3"));
+        stubber.withDependency("org.junit", "junit", "junit.version", "4.13.2");
 
         Stream<String> violations = rule.scan();
 
@@ -142,12 +140,11 @@ class UnusedPropertyRuleTest {
 
     @Test
     void executePassesWhenAllPropertiesUsed() {
-        originalModel.addProperty("junit.version", "5.9.3");
-        originalModel.addDependency(dependencyOf("org.junit", "junit", "${junit.version}"));
+        stubber.withDependency("org.junit", "junit", "junit.version", "4.13.2");
 
-        effectiveModel.addDependency(dependencyOf("org.junit", "junit", "5.9.3"));
+        Exception result = catchException(rule::execute);
 
-        assertThatNoException().isThrownBy(rule::execute);
+        assertThat(result).isNull();
     }
 
     @Test
