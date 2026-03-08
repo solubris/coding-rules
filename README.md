@@ -1,4 +1,4 @@
-# Coding Rule [![Java CI with Maven](https://github.com/lithium147/coding-rules/actions/workflows/maven.yml/badge.svg)](https://github.com/lithium147/coding-rules/actions/workflows/maven.yml)
+# Coding Rule [![Java CI with Maven](https://github.com/lithium147/coding-rules/actions/workflows/maven.yml/badge.svg)](https://github.com/lithium147/coding-rules/actions/workflows/maven.yml)|[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=solubris_coding-rules&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=solubris_coding-rules)
 
 
 ### TODO create syntactic sugar library
