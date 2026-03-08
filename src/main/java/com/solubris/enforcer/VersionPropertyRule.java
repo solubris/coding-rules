@@ -4,7 +4,6 @@ import org.apache.maven.enforcer.rule.api.AbstractEnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Model;
-import org.apache.maven.project.MavenProject;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -15,6 +14,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static com.solubris.enforcer.ModelScanner.modelFrom;
 import static com.solubris.enforcer.ModelScanner.scanModel;
 import static com.solubris.enforcer.PropertyUtil.fromPlaceHolder;
 import static com.solubris.enforcer.Violations.throwViolations;
@@ -55,14 +55,6 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
     protected VersionPropertyRule(Model originalModel, Model effectiveModel) {
         this.originalModel = originalModel;
         this.effectiveModel = effectiveModel;
-    }
-
-    private static Model modelFrom(MavenSession session) {
-        // Use original model to avoid implicit/default plugins and dependencies
-        // that Maven adds automatically (e.g., default compiler plugin)
-        MavenProject project = session.getCurrentProject();
-        Model originalModel = project.getOriginalModel();
-        return originalModel != null ? originalModel : project.getModel();
     }
 
     @Override

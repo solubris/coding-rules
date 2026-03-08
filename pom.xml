@@ -19,7 +19,7 @@
         <unusedPropertyRule.suppressions>junit.version,kept-for-compat.version</unusedPropertyRule.suppressions>
         <pmd.version>7.22.0</pmd.version>
         <junit.version>6.0.3</junit.version>
-        <project.junit.version>6.0.3</project.junit.version>
+        <enforcer.version>3.6.2</enforcer.version>
 
         <sonar.organization>solubris</sonar.organization>
         <sonar.java.checkstyle.reportPaths>${project.build.directory}/checkstyle-result.xml</sonar.java.checkstyle.reportPaths>
@@ -52,7 +52,7 @@
         <dependency>
             <groupId>org.apache.maven.enforcer</groupId>
             <artifactId>enforcer-api</artifactId>
-            <version>3.6.2</version>
+            <version>${enforcer.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -316,7 +316,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.6.2</version>
+                <version>${enforcer.version}</version>
                 <configuration>
                     <!--suppress MavenModelInspection -->
                     <skip>${skipChecks}</skip>
