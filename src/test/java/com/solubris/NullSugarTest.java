@@ -23,7 +23,7 @@ class NullSugarTest {
         }
 
         @Test
-        void coalesce() {
+        void returnsNullIfAllNull() {
             String result = NullSugar.coalesce(null, null);
 
             assertThat(result).isNull();
