@@ -89,7 +89,7 @@ public class UnusedPropertyRule extends AbstractEnforcerRule {
         if (raw == null || raw.isBlank()) return Collections.emptySet();
         return Arrays.stream(raw.split("[,\\s]+"))
                 .map(String::trim)
-                .filter(s -> !s.isEmpty())
+                .filter(not(String::isEmpty))
                 .collect(toUnmodifiableSet());
     }
 
