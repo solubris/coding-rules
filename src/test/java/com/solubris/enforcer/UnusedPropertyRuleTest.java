@@ -5,14 +5,12 @@ import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
-import org.apache.maven.model.Reporting;
 import org.junit.jupiter.api.Test;
 
 import java.util.stream.Stream;
 
 import static com.solubris.enforcer.ModelStubber.dependencyOf;
 import static com.solubris.enforcer.ModelStubber.pluginOf;
-import static com.solubris.enforcer.ModelStubber.reportPluginOf;
 import static com.solubris.enforcer.UnusedPropertyRule.SUPPRESSIONS_PROPERTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -65,14 +63,7 @@ class UnusedPropertyRuleTest {
 
     @Test
     void versionPropertyUsedByReportPluginPasses() {
-        originalModel.addProperty("site.version", "4.0.0");
-        Reporting originalReporting = new Reporting();
-        originalReporting.addPlugin(reportPluginOf("apache.maven.plugins", "maven-site-plugin", "${site.version}"));
-        originalModel.setReporting(originalReporting);
-
-        Reporting effectiveReporting = new Reporting();
-        effectiveReporting.addPlugin(reportPluginOf("apache.maven.plugins", "maven-site-plugin", "4.0.0"));
-        effectiveModel.setReporting(effectiveReporting);
+        stubber.withReportPlugin("apache.maven.plugins", "maven-site-plugin", "site.version", "4.0.0");
 
         Stream<String> violations = rule.scan();
 
