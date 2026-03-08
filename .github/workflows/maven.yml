@@ -39,6 +39,16 @@ jobs:
       with:
         sarif_file: sonarqube.sarif
 
+    - name: Extract pull request number # (commenting on the pull request requires the PR number)
+      uses: jwalton/gh-find-current-pr@v1
+      id: pr
+    - name: Run Autograding
+      uses: uhafner/autograding-github-action@v3
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        pr-number: ${{ steps.pr.outputs.number }}
+        checks-name: "Autograding GitHub Action"
+
 # back to automatic sonar scan
 # org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
 
