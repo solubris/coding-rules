@@ -27,6 +27,16 @@ jobs:
         files: target/surefire-reports/**/*.xml
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Convert SonarQube issues to SARIF
+      uses: vmvarela/sonarqube-ce-sarif-action@v1
+      with:
+        sonar-host-url: https://sonarcloud.io
+        sonar-token: ${{ secrets.SONAR_TOKEN }}
+    - name: Upload SARIF
+      if: github.event_name != 'pull_request'
+      uses: github/codeql-action/upload-sarif@v4
+      with:
+        sarif_file: sonarqube.sarif
 
 # back to automatic sonar scan
 # org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
