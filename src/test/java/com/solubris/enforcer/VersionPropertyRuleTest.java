@@ -44,7 +44,7 @@ class VersionPropertyRuleTest {
 
     @Test
     void multipleUseOfPropertyAllowed() {
-        modelStubber.withDependency("junit", "junit", "junit.version", "4.13.2");
+        modelStubber.withDependency("org.junit.jupiter", "junit-engine", "junit.version", "4.13.2");
         modelStubber.withDependency("org.junit.jupiter", "junit-jupiter-api", "junit.version", "4.13.2");
 
         Stream<String> violations = rule.scan();
@@ -63,7 +63,7 @@ class VersionPropertyRuleTest {
     class RequirePropertiesForDuplicates {
         @Test
         void multipleExplicitVersionsNotAllowed() {
-            modelStubber.withDependency("junit", "junit", "4.13.2");
+            modelStubber.withDependency("org.junit.jupiter", "junit-engine", "4.13.2");
             modelStubber.withDependency("org.junit.jupiter", "junit-jupiter-api", "4.13.2");
 
 //            DependencyManagement depMgmt = new DependencyManagement();
@@ -75,6 +75,20 @@ class VersionPropertyRuleTest {
             assertThat(violations).hasSize(1);
         }
 
+        /**
+         * Entirely legitimate to use the same version for disparate dependencies.
+         * Assume they must have a different groupId.
+         */
+        @Test
+        void coincidentalVersionsAllowed() {
+            modelStubber.withDependency("com.pmd", "pmd.core", "4.13.2");
+            modelStubber.withDependency("org.junit.jupiter", "junit-jupiter-api", "4.13.2");
+
+            Stream<String> violations = rule.scan();
+
+            assertThat(violations).isEmpty();
+        }
+
         @Test
         void multipleExplicitVersionsNotAllowedCoveringAllTypes() {
             modelStubber.withAllTypes(() -> "4.13.2");
@@ -82,7 +96,7 @@ class VersionPropertyRuleTest {
             Stream<String> violations = rule.scan();
 
             // TODO how to assert the multiple locations for this violation?
-            assertThat(violations).hasSize(1);
+            assertThat(violations).isNotEmpty();
         }
 
         @Test

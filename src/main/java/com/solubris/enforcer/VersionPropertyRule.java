@@ -67,14 +67,14 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
                 .map(a -> a.withEffectiveVersion(fetchVersion(a, byKey)))
                 .filter(a -> a.getEffectiveVersion() != null)
                 .filter(artifact -> !isExcluded(artifact.getVersion()))
-                .collect(groupingBy(Artifact::getEffectiveVersion, toList()));
+                .collect(groupingBy(Artifact::uniqueness, toList()));
 
         // byVersion maps from property to list of artifacts
         // now can go through property keys and check usage
 
         return usages.entrySet().stream()
                 .map(e -> {
-                    String effectiveVersion = e.getKey();
+                    String effectiveVersion = e.getKey().split(":")[1];
                     List<Artifact> artifacts = e.getValue();
                     long propertyCount = artifacts.stream()
                             .filter(Artifact::hasImplicitVersion)
@@ -108,7 +108,8 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
      * The artifacts could either have the explicit version or a reference to the property.
      * Where the property represents the same version.
      * If the property uses a different version than the explicit version,
-     * then that would be detected at the moment - could be a different violation (property value doesn't match usage).
+     * then that would not be detected at the moment
+     * - could be a different violation (property value doesn't match usage).
      *
      * <p>Could the artifacts refer to different properties that have the same value?
      * That's possible due to coincidental properties - another edge case to consider.
@@ -128,17 +129,17 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
                 propertyName, effectiveVersion, unused);
     }
 
-    private String missingPropertyViolation(String version, List<Artifact> artifacts) {
+    private String missingPropertyViolation(String effectiveVersion, List<Artifact> artifacts) {
         if (!requirePropertiesForDuplicates) return null;
 
         String unused = artifacts.stream()
-                .filter(a -> Objects.equals(a.getVersion(), a.getEffectiveVersion()))
+                .filter(Artifact::hasExplicitVersion)   // TODO is this required since all artifacts at this point should be explicitly versioned
                 .map(Artifact::key)
                 .collect(joining(", "));
         return String.format(
                 "Version '%s' exists in multiple locations, please extract a version property. " +
                         "Unused locations: %s",
-                version, unused);
+                effectiveVersion, unused);
     }
 
     /**

@@ -76,4 +76,28 @@ public class Artifact {
     public boolean hasImplicitVersion() {
         return !Objects.equals(getVersion(), getEffectiveVersion());
     }
+
+    /**
+     * Uniqueness is used to avoid violations on coincidental artifact versions.
+     *
+     * <p>What about groupId's like this
+     * - org.junit.jupiter
+     * - org.junit.platform
+     * Could remove one level of the package.
+     *
+     * <p>The coincidence problem puts the whole rule into jeopardy.
+     * Without a good solution, can only report warnings.
+     *
+     * <p>How is each violation affected:
+     * - redundantPropertyViolation
+     * grouping by groupId ruins this - property could be used for multiple artifacts with the different groupIds.
+     * - unusedPropertyViolation
+     * grouping by groupId is ok - some locations should not use the property
+     * - missingPropertyViolation
+     * grouping by groupId is ok - some locations should not use the property
+     *
+     */
+    public String uniqueness() {
+        return String.join(":", getGroupId(), getEffectiveVersion());
+    }
 }
