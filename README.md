@@ -6,6 +6,8 @@
 ## TODO's
 - ${project.version} can be excluded from the enforcer rule as it is a special property that is commonly used
  in fact, ${project.*} can be excluded
+- copy GetterMethod tests from citi
+
 
 Split the enforcer into two rules:
 - one for checking the existing properties
