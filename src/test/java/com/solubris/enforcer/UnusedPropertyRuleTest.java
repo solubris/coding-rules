@@ -28,9 +28,8 @@ class UnusedPropertyRuleTest {
     private final UnusedPropertyRule rule;
 
     UnusedPropertyRuleTest() {
-        UnusedPropertyRule rule = new UnusedPropertyRule(originalModel, effectiveModel);
+        this.rule = new UnusedPropertyRule(originalModel, effectiveModel);
         rule.setLog(mock(EnforcerLogger.class));
-        this.rule = rule;
     }
 
     @Test
