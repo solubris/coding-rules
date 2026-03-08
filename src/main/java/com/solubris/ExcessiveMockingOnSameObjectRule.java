@@ -73,7 +73,6 @@ public class ExcessiveMockingOnSameObjectRule extends AbstractJavaRule {
 
         // Keep going deeper into the **leftmost/first child chain** until we run out
         while (primary != null) {
-
             // If we hit a variable/field access node → that's usually what we want
             if (primary instanceof ASTVariableAccess astVariableAccess) {
                 // Return the simple name of the variable/field (e.g. "mockList", "service")
