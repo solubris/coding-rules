@@ -1,6 +1,9 @@
 package com.solubris.enforcer;
 
 public class PropertyUtil {
+    private PropertyUtil() {
+    }
+
     public static String asPlaceHolder(String version) {
         return String.format("${%s}", version);
     }

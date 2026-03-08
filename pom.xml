@@ -21,6 +21,9 @@
         <junit.version>6.0.3</junit.version>
         <enforcer.version>3.6.2</enforcer.version>
 
+        <sonar.sources>.</sonar.sources>
+        <sonar.tests>src/test</sonar.tests>
+        <sonar.exclusions>src/test/**</sonar.exclusions>
         <sonar.organization>solubris</sonar.organization>
         <sonar.projectKey>solubris_coding-rules</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
