@@ -1,6 +1,5 @@
 package com.solubris.enforcer;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
@@ -106,8 +105,7 @@ public class ModelStubber {
         return result;
     }
 
-    @CanIgnoreReturnValue
-    public ModelStubber withManagedDependency(String groupId, String artifactId, String version, String effectiveVersion) {
+    public void withManagedDependency(String groupId, String artifactId, String version, String effectiveVersion) {
         DependencyManagement dependencyManagement = new DependencyManagement();
         dependencyManagement.addDependency(dependencyOf(groupId, artifactId, effectiveVersion));
         effectiveModel.setDependencyManagement(dependencyManagement);
@@ -116,37 +114,25 @@ public class ModelStubber {
         dependencyManagement = new DependencyManagement();
         dependencyManagement.addDependency(dependencyOf(groupId, artifactId, asPlaceHolder(version)));
         originalModel.setDependencyManagement(dependencyManagement);
-
-        return this;
     }
 
-    @CanIgnoreReturnValue
-    public ModelStubber withManagedDependency(String groupId, String artifactId, String version) {
+    public void withManagedDependency(String groupId, String artifactId, String version) {
         DependencyManagement dependencyManagement = new DependencyManagement();
         dependencyManagement.addDependency(dependencyOf(groupId, artifactId, version));
         effectiveModel.setDependencyManagement(dependencyManagement);
         originalModel.setDependencyManagement(dependencyManagement);
-
-        return this;
     }
 
-    @CanIgnoreReturnValue
-    public ModelStubber withDependency(String groupId, String artifactId, String version, String effectiveVersion) {
+    public void withDependency(String groupId, String artifactId, String version, String effectiveVersion) {
         effectiveModel.addDependency(dependencyOf(groupId, artifactId, effectiveVersion));
         originalModel.addProperty(version, effectiveVersion);
-        originalModel.addDependency(dependencyOf(groupId, artifactId, asPlaceHolder(version)));
-        return this;
-    }
+        originalModel.addDependency(dependencyOf(groupId, artifactId, asPlaceHolder(version)));    }
 
-    @CanIgnoreReturnValue
-    public ModelStubber withDependency(String groupId, String artifactId, String version) {
+    public void withDependency(String groupId, String artifactId, String version) {
         effectiveModel.addDependency(dependencyOf(groupId, artifactId, version));
-        originalModel.addDependency(dependencyOf(groupId, artifactId, version));
-        return this;
-    }
+        originalModel.addDependency(dependencyOf(groupId, artifactId, version));    }
 
-    @CanIgnoreReturnValue
-    public ModelStubber withPlugin(String groupId, String artifactId, String version, String effectiveVersion) {
+    public void withPlugin(String groupId, String artifactId, String version, String effectiveVersion) {
         Build build = buildFrom(effectiveModel);
         build.addPlugin(pluginOf(groupId, artifactId, effectiveVersion));
         effectiveModel.setBuild(build);
@@ -155,24 +141,18 @@ public class ModelStubber {
         build.addPlugin(pluginOf(groupId, artifactId, asPlaceHolder(version)));
         originalModel.setBuild(build);
         originalModel.addProperty(version, effectiveVersion);
-
-        return this;
     }
 
-    @CanIgnoreReturnValue
-    public ModelStubber withPlugin(String groupId, String artifactId, String version) {
+    public void withPlugin(String groupId, String artifactId, String version) {
         Build build = buildFrom(effectiveModel);
         build.addPlugin(pluginOf(groupId, artifactId, version));
         effectiveModel.setBuild(build);
         build = buildFrom(originalModel);
         build.addPlugin(pluginOf(groupId, artifactId, version));
         originalModel.setBuild(build);
-
-        return this;
     }
 
-    @CanIgnoreReturnValue
-    public ModelStubber withManagedPlugin(String groupId, String artifactId, String version, String effectiveVersion) {
+    public void withManagedPlugin(String groupId, String artifactId, String version, String effectiveVersion) {
         PluginManagement pluginManagement = new PluginManagement();
         pluginManagement.addPlugin(pluginOf(groupId, artifactId, effectiveVersion));
         Build build = buildFrom(effectiveModel);
@@ -185,12 +165,9 @@ public class ModelStubber {
         build.setPluginManagement(pluginManagement);
         originalModel.setBuild(build);
         originalModel.addProperty(version, effectiveVersion);
-
-        return this;
     }
 
-    @CanIgnoreReturnValue
-    public ModelStubber withManagedPlugin(String groupId, String artifactId, String version) {
+    public void withManagedPlugin(String groupId, String artifactId, String version) {
         PluginManagement pluginManagement = new PluginManagement();
         pluginManagement.addPlugin(pluginOf(groupId, artifactId, version));
         Build build = buildFrom(effectiveModel);
@@ -202,7 +179,5 @@ public class ModelStubber {
         build = buildFrom(originalModel);
         build.setPluginManagement(pluginManagement);
         originalModel.setBuild(build);
-
-        return this;
     }
 }
