@@ -74,7 +74,7 @@ jobs:
                   },
                   {
                     "id": "pmd",
-                    "pattern": "**/target/pmd-*/pmd.xml"
+                    "pattern": "**/target/pmd.xml"
                   }
                 ],
                 "errorImpact": -1,
