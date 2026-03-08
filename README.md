@@ -1,9 +1,11 @@
+# Coding Rule [![Java CI with Maven](https://github.com/lithium147/coding-rules/actions/workflows/maven.yml/badge.svg)](https://github.com/lithium147/coding-rules/actions/workflows/maven.yml)
 
-# TODO create syntactic sugar library
 
-# TODO's
-# ${project.version} can be excluded from the enforcer rule as it is a special property that is commonly used
-# in fact, ${project.*} can be excluded
+### TODO create syntactic sugar library
+
+## TODO's
+- ${project.version} can be excluded from the enforcer rule as it is a special property that is commonly used
+ in fact, ${project.*} can be excluded
 
 Split the enforcer into two rules:
 - one for checking the existing properties
