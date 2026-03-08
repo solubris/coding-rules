@@ -131,14 +131,14 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
     private String missingProperty(String version, List<Artifact> artifacts) {
         if (!requirePropertiesForDuplicates) return null;
 
-        String unused = artifacts.stream()
+        String locationsWithoutProperty = artifacts.stream()
                 .filter(a -> Objects.equals(a.getVersion(), a.getEffectiveVersion()))
                 .map(Artifact::key)
                 .collect(joining(", "));
         return String.format(
                 "Version '%s' exists in multiple locations, please extract a version property. " +
                         "Unused locations: %s",
-                version, unused);
+                version, locationsWithoutProperty);
     }
 
     /**
