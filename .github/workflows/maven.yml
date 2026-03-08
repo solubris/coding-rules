@@ -34,7 +34,7 @@ jobs:
         sonar-token: ${{ secrets.SONAR_TOKEN }}
 #        processing-delay: 60 # seconds
          # Optional: If your SonarQube project key is different from the repository name, specify it here
-        sonar-project-key: solubris_coding-rules
+        project-key: solubris_coding-rules
     - name: Upload SARIF
       if: github.event_name != 'pull_request'
       uses: github/codeql-action/upload-sarif@v4
