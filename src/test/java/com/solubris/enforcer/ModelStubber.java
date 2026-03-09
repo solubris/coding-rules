@@ -37,6 +37,10 @@ public class ModelStubber {
         return coalesce(model.getBuild(), new Build());
     }
 
+    private static Reporting reportingFrom(Model model) {
+        return coalesce(model.getReporting(), new Reporting());
+    }
+
     public static Dependency dependencyOf(String groupId, String artifactId, String version) {
         Dependency result = new Dependency();
         result.setGroupId(groupId);
@@ -181,5 +185,45 @@ public class ModelStubber {
         build = buildFrom(originalModel);
         build.setPluginManagement(pluginManagement);
         originalModel.setBuild(build);
+    }
+
+    public void withExtension(String groupId, String artifactId, String version, String effectiveVersion) {
+        Build build = buildFrom(effectiveModel);
+        build.addExtension(extensionOf(groupId, artifactId, effectiveVersion));
+        effectiveModel.setBuild(build);
+
+        build = buildFrom(originalModel);
+        build.addExtension(extensionOf(groupId, artifactId, asPlaceHolder(version)));
+        originalModel.setBuild(build);
+        originalModel.addProperty(version, effectiveVersion);
+    }
+
+    public void withExtension(String groupId, String artifactId, String version) {
+        Build build = buildFrom(effectiveModel);
+        build.addExtension(extensionOf(groupId, artifactId, version));
+        effectiveModel.setBuild(build);
+        build = buildFrom(originalModel);
+        build.addExtension(extensionOf(groupId, artifactId, version));
+        originalModel.setBuild(build);
+    }
+
+    public void withReportPlugin(String groupId, String artifactId, String version, String effectiveVersion) {
+        Reporting reporting = reportingFrom(effectiveModel);
+        reporting.addPlugin(reportPluginOf(groupId, artifactId, effectiveVersion));
+        effectiveModel.setReporting(reporting);
+
+        reporting = reportingFrom(originalModel);
+        reporting.addPlugin(reportPluginOf(groupId, artifactId, asPlaceHolder(version)));
+        originalModel.setReporting(reporting);
+        originalModel.addProperty(version, effectiveVersion);
+    }
+
+    public void withReportPlugin(String groupId, String artifactId, String version) {
+        Reporting reporting = reportingFrom(effectiveModel);
+        reporting.addPlugin(reportPluginOf(groupId, artifactId, version));
+        effectiveModel.setReporting(reporting);
+        reporting = reportingFrom(originalModel);
+        reporting.addPlugin(reportPluginOf(groupId, artifactId, version));
+        originalModel.setReporting(reporting);
     }
 }

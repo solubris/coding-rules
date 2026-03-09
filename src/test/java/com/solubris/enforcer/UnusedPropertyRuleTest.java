@@ -5,20 +5,17 @@ import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
-import org.apache.maven.model.PluginManagement;
-import org.apache.maven.model.Reporting;
 import org.junit.jupiter.api.Test;
 
 import java.util.stream.Stream;
 
 import static com.solubris.enforcer.ModelStubber.dependencyOf;
-import static com.solubris.enforcer.ModelStubber.extensionOf;
 import static com.solubris.enforcer.ModelStubber.pluginOf;
-import static com.solubris.enforcer.ModelStubber.reportPluginOf;
 import static com.solubris.enforcer.UnusedPropertyRule.SUPPRESSIONS_PROPERTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchException;
 import static org.mockito.Mockito.mock;
 
 class UnusedPropertyRuleTest {
@@ -57,35 +54,8 @@ class UnusedPropertyRuleTest {
     }
 
     @Test
-    void versionPropertyUsedByManagedPluginPasses() {
-        originalModel.addProperty("compiler.version", "3.13.0");
-        Build originalBuild = new Build();
-        PluginManagement originalPluginMgmt = new PluginManagement();
-        originalPluginMgmt.addPlugin(pluginOf("apache.maven.plugins", "maven-compiler-plugin", "${compiler.version}"));
-        originalBuild.setPluginManagement(originalPluginMgmt);
-        originalModel.setBuild(originalBuild);
-
-        Build effectiveBuild = new Build();
-        PluginManagement effectivePluginMgmt = new PluginManagement();
-        effectivePluginMgmt.addPlugin(pluginOf("apache.maven.plugins", "maven-compiler-plugin", "3.13.0"));
-        effectiveBuild.setPluginManagement(effectivePluginMgmt);
-        effectiveModel.setBuild(effectiveBuild);
-
-        Stream<String> violations = rule.scan();
-
-        assertThat(violations).isEmpty();
-    }
-
-    @Test
     void versionPropertyUsedByExtensionPasses() {
-        originalModel.addProperty("ext.version", "1.0.0");
-        Build originalBuild = new Build();
-        originalBuild.addExtension(extensionOf("org.example", "my-extension", "${ext.version}"));
-        originalModel.setBuild(originalBuild);
-
-        Build effectiveBuild = new Build();
-        effectiveBuild.addExtension(extensionOf("org.example", "my-extension", "1.0.0"));
-        effectiveModel.setBuild(effectiveBuild);
+        stubber.withExtension("org.example", "my-extension", "ext.version", "1.0.0");
 
         Stream<String> violations = rule.scan();
 
@@ -94,14 +64,7 @@ class UnusedPropertyRuleTest {
 
     @Test
     void versionPropertyUsedByReportPluginPasses() {
-        originalModel.addProperty("site.version", "4.0.0");
-        Reporting originalReporting = new Reporting();
-        originalReporting.addPlugin(reportPluginOf("apache.maven.plugins", "maven-site-plugin", "${site.version}"));
-        originalModel.setReporting(originalReporting);
-
-        Reporting effectiveReporting = new Reporting();
-        effectiveReporting.addPlugin(reportPluginOf("apache.maven.plugins", "maven-site-plugin", "4.0.0"));
-        effectiveModel.setReporting(effectiveReporting);
+        stubber.withReportPlugin("apache.maven.plugins", "maven-site-plugin", "site.version", "4.0.0");
 
         Stream<String> violations = rule.scan();
 
@@ -144,11 +107,8 @@ class UnusedPropertyRuleTest {
 
     @Test
     void multiplePropertiesMixedUsage() {
-        originalModel.addProperty("junit.version", "5.9.3");
         originalModel.addProperty("old-lib.version", "2.0.0");
-        originalModel.addDependency(dependencyOf("org.junit", "junit", "${junit.version}"));
-
-        effectiveModel.addDependency(dependencyOf("org.junit", "junit", "5.9.3"));
+        stubber.withDependency("org.junit", "junit", "junit.version", "4.13.2");
 
         Stream<String> violations = rule.scan();
 
@@ -180,12 +140,11 @@ class UnusedPropertyRuleTest {
 
     @Test
     void executePassesWhenAllPropertiesUsed() {
-        originalModel.addProperty("junit.version", "5.9.3");
-        originalModel.addDependency(dependencyOf("org.junit", "junit", "${junit.version}"));
+        stubber.withDependency("org.junit", "junit", "junit.version", "4.13.2");
 
-        effectiveModel.addDependency(dependencyOf("org.junit", "junit", "5.9.3"));
+        Exception result = catchException(rule::execute);
 
-        assertThatNoException().isThrownBy(rule::execute);
+        assertThat(result).isNull();
     }
 
     @Test
