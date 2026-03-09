@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 import static com.solubris.NullSugar.coalesce;
 import static com.solubris.enforcer.PropertyUtil.asPlaceHolder;
+import static org.apache.maven.artifact.ArtifactUtils.versionlessKey;
 
 public class ModelStubber {
     private static final Set<String> previouslyGeneratedVersions = new HashSet<>();
@@ -149,13 +150,14 @@ public class ModelStubber {
         originalModel.addProperty(version, effectiveVersion);
     }
 
-    public void withPlugin(String groupId, String artifactId, String version) {
+    public String withPlugin(String groupId, String artifactId, String version) {
         Build build = buildFrom(effectiveModel);
         build.addPlugin(pluginOf(groupId, artifactId, version));
         effectiveModel.setBuild(build);
         build = buildFrom(originalModel);
         build.addPlugin(pluginOf(groupId, artifactId, version));
         originalModel.setBuild(build);
+        return versionlessKey(groupId, artifactId);
     }
 
     public void withManagedPlugin(String groupId, String artifactId, String version, String effectiveVersion) {
@@ -225,5 +227,20 @@ public class ModelStubber {
         reporting = reportingFrom(originalModel);
         reporting.addPlugin(reportPluginOf(groupId, artifactId, version));
         originalModel.setReporting(reporting);
+    }
+
+    public void withPluginDependency(String pluginId, String groupId, String artifactId, String version, String effectiveVersion) {
+        Plugin plugin = effectiveModel.getBuild().getPluginsAsMap().get(pluginId);
+        plugin.addDependency(dependencyOf(groupId, artifactId, effectiveVersion));
+        plugin = originalModel.getBuild().getPluginsAsMap().get(pluginId);
+        plugin.addDependency(dependencyOf(groupId, artifactId, asPlaceHolder(version)));
+        originalModel.addProperty(version, effectiveVersion);
+    }
+
+    public void withPluginDependency(String pluginId, String groupId, String artifactId, String version) {
+        Plugin plugin = effectiveModel.getBuild().getPluginsAsMap().get(pluginId);
+        plugin.addDependency(dependencyOf(groupId, artifactId, version));
+        plugin = originalModel.getBuild().getPluginsAsMap().get(pluginId);
+        plugin.addDependency(dependencyOf(groupId, artifactId, asPlaceHolder(version)));
     }
 }

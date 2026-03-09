@@ -2,15 +2,11 @@ package com.solubris.enforcer;
 
 import org.apache.maven.enforcer.rule.api.EnforcerLogger;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
-import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
-import org.apache.maven.model.Plugin;
 import org.junit.jupiter.api.Test;
 
 import java.util.stream.Stream;
 
-import static com.solubris.enforcer.ModelStubber.dependencyOf;
-import static com.solubris.enforcer.ModelStubber.pluginOf;
 import static com.solubris.enforcer.UnusedPropertyRule.SUPPRESSIONS_PROPERTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -149,18 +145,8 @@ class UnusedPropertyRuleTest {
 
     @Test
     void versionPropertyUsedByPluginDependencyPasses() {
-        originalModel.addProperty("api.version", "3.0.0");
-        Build originalBuild = new Build();
-        Plugin plugin = pluginOf("org.apache.maven.plugins", "maven-compiler-plugin", "3.13.0");
-        plugin.addDependency(dependencyOf("org.apache.maven", "maven-plugin-api", "${api.version}"));
-        originalBuild.addPlugin(plugin);
-        originalModel.setBuild(originalBuild);
-
-        Build effectiveBuild = new Build();
-        Plugin effectivePlugin = pluginOf("org.apache.maven.plugins", "maven-compiler-plugin", "3.13.0");
-        effectivePlugin.addDependency(dependencyOf("org.apache.maven", "maven-plugin-api", "3.0.0"));
-        effectiveBuild.addPlugin(effectivePlugin);
-        effectiveModel.setBuild(effectiveBuild);
+        String pluginId = stubber.withPlugin("org.apache.maven.plugins", "maven-compiler-plugin", "3.13.0");
+        stubber.withPluginDependency(pluginId, "org.apache.maven", "maven-plugin-api", "api.version", "3.0.0");
 
         Stream<String> violations = rule.scan();
 
