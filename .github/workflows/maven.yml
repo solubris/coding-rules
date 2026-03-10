@@ -20,13 +20,6 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN: ${{ github.token }}
       run: mvn -B install org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
-    - name: Publish Unit Test Results
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
-      with:
-        files: target/surefire-reports/**/*.xml
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Convert SonarQube issues to SARIF
       uses: vmvarela/sonarqube-ce-sarif-action@v1
       with:
