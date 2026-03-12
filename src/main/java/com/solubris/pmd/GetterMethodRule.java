@@ -64,6 +64,8 @@ public class GetterMethodRule extends AbstractJavaRule {
      * This means combining the various checks into a single getter method violation.
      * But not sure how that would look - it might be too long.
      * Does it support newlines in the violation text?
+     * - yes, but not in sonar UI
+     * Does it support HTML?
      */
     private void checkMethod(ASTMethodDeclaration node, RuleContext context) {
         String methodName = node.getName();
@@ -87,7 +89,7 @@ public class GetterMethodRule extends AbstractJavaRule {
         LongAdder count = new LongAdder();
         String message = builder.build()
                 .peek(t -> count.increment())
-                .collect(joining("\n - ", " - ", ""));
+                .collect(joining("\n<BR> - ", " - ", ""));
         if (count.sum() == 0) return;
         context.addViolation(node, methodName, message);
     }
