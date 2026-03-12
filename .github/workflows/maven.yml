@@ -19,26 +19,7 @@ jobs:
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         GITHUB_TOKEN: ${{ github.token }}
-      run: mvn -B install org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
-    - name: Publish Unit Test Results
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
-      with:
-        files: target/surefire-reports/**/*.xml
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Convert SonarQube issues to SARIF
-      uses: vmvarela/sonarqube-ce-sarif-action@v1
-      with:
-        sonar-host-url: https://sonarcloud.io
-        sonar-token: ${{ secrets.SONAR_TOKEN }}
-        project-key: solubris_coding-rules
-    - name: Upload SARIF
-      if: github.event_name != 'pull_request'
-      uses: github/codeql-action/upload-sarif@v4
-      with:
-        sarif_file: sonarqube.sarif
-
+      run: mvn -B install -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
     - name: Extract pull request number # (commenting on the pull request requires the PR number)
       uses: jwalton/gh-find-current-pr@v1
       id: pr
