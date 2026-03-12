@@ -107,4 +107,14 @@ public Supplier<String> getter() {
             ]]>
         </example>
     </rule>
+
+    <rule name="UnmodifiableSetCollectorRule"
+          language="java"
+          class="com.solubris.pmd.UnmodifiableSetCollectorRule"
+          message=".collect(Collectors.toSet()) should be replaced with .collect(toUnmodifiableSet())">
+        <description>
+            Flags usages of .collect(Collectors.toSet()) and suggests replacing with .collect(toUnmodifiableSet()).
+        </description>
+        <priority>3</priority>
+    </rule>
 </ruleset>

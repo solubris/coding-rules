@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test-data
+        xmlns="http://pmd.sourceforge.net/rule-tests"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://pmd.sourceforge.net/rule-tests https://pmd.sourceforge.io/rule-tests_1_0_0.xsd">
+
+    <test-code>
+        <description>Detects .collect(Collectors.toSet())</description>
+        <expected-problems>1</expected-problems>
+        <code><![CDATA[
+            import java.util.*;
+            import java.util.stream.*;
+
+            class X {
+                Set<String> foo(List<String> list) {
+                    return list.stream().collect(Collectors.toSet());
+                }
+            }
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Detects .collect(toSet())</description>
+        <expected-problems>1</expected-problems>
+        <code><![CDATA[
+            import java.util.*;
+            import java.util.stream.*;
+
+            class X {
+                Set<String> foo(List<String> list) {
+                    return list.stream().collect(toSet());
+                }
+            }
+        ]]></code>
+    </test-code>
+
+    <test-code>
+        <description>Does not detect .collect(Collectors.toList())</description>
+        <expected-problems>0</expected-problems>
+        <code><![CDATA[
+            import java.util.*;
+            import java.util.stream.*;
+
+            class X {
+                List<String> foo(List<String> list) {
+                    return list.stream().collect(Collectors.toList());
+                }
+            }
+        ]]></code>
+    </test-code>
+</test-data>
