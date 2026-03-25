@@ -1,5 +1,6 @@
 package com.solubris.enforcer;
 
+import com.solubris.ToBeShared;
 import org.apache.maven.enforcer.rule.api.AbstractEnforcerRule;
 import org.apache.maven.enforcer.rule.api.EnforcerRuleException;
 import org.apache.maven.execution.MavenSession;
@@ -80,6 +81,7 @@ public class UnusedPropertyRule extends AbstractEnforcerRule {
                 }).filter(Objects::nonNull);
     }
 
+    @ToBeShared
     private static Map.Entry<String, String> asStringEntry(Map.Entry<Object, Object> e) {
         return Map.entry(e.getKey().toString(), e.getValue() != null ? e.getValue().toString() : "");
     }

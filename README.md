@@ -77,3 +77,12 @@ replace with:
 What about this case:
                 .collect(groupingBy(Artifact::fullKey, toList()));
 
+Interestingly Stream.of("aaa").toList() does return an immutable list
+
+
+## PMD - don't mock dto object
+
+Initially can detect *Info classes as these are very likely DTO's
+
+
+
