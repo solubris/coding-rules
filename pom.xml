@@ -16,7 +16,7 @@
         <skipChecks>${skipTests}</skipChecks>
 
         <unusedPropertyRule.suppressions>junit.version,kept-for-compat.version</unusedPropertyRule.suppressions>
-        <pmd.version>7.22.0</pmd.version>
+        <pmd.version>7.23.0</pmd.version>
         <junit.version>6.0.3</junit.version>
         <enforcer.version>3.6.2</enforcer.version>
 
