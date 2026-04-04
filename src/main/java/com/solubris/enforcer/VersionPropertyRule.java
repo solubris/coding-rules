@@ -76,14 +76,14 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
                 .map(e -> {
                     String effectiveVersion = e.getKey();
                     List<Artifact> artifacts = e.getValue();
-                    long propertyCount = artifacts.stream()
+                    long implicitVersionCount = artifacts.stream()
                             .filter(Artifact::hasImplicitVersion)
                             .count();
                     if (artifacts.size() > 1) {
-                        if (propertyCount == 0) return missingProperty(effectiveVersion, artifacts);
-                        if (propertyCount < artifacts.size()) return unusedProperty(effectiveVersion, artifacts);
+                        if (implicitVersionCount == 0) return missingProperty(effectiveVersion, artifacts);
+                        if (implicitVersionCount < artifacts.size()) return unusedProperty(effectiveVersion, artifacts);
                     } else if (artifacts.size() == 1) {
-                        if (propertyCount == 1) return redundantProperty(artifacts.get(0));
+                        if (implicitVersionCount == 1) return redundantProperty(artifacts.get(0));
                     }
                     return null;
                 }).filter(Objects::nonNull);
@@ -114,7 +114,7 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
      * That's possible due to coincidental properties - another edge case to consider.
      */
     private static String unusedProperty(String effectiveVersion, List<Artifact> artifacts) {
-        String unused = artifacts.stream()
+        String explicitVersionLocations = artifacts.stream()
                 .filter(Artifact::hasExplicitVersion)
                 .map(Artifact::key)
                 .collect(joining(", "));
@@ -125,20 +125,20 @@ public class VersionPropertyRule extends AbstractEnforcerRule {
                 .findAny().orElse("unknown");
         return String.format(
                 "Version property %s=%s exists but is not used everywhere. Unused locations: %s",
-                propertyName, effectiveVersion, unused);
+                propertyName, effectiveVersion, explicitVersionLocations);
     }
 
     private String missingProperty(String version, List<Artifact> artifacts) {
         if (!requirePropertiesForDuplicates) return null;
 
-        String unused = artifacts.stream()
+        String locationsWithoutProperty = artifacts.stream()
                 .filter(a -> Objects.equals(a.getVersion(), a.getEffectiveVersion()))
                 .map(Artifact::key)
                 .collect(joining(", "));
         return String.format(
                 "Version '%s' exists in multiple locations, please extract a version property. " +
                         "Unused locations: %s",
-                version, unused);
+                version, locationsWithoutProperty);
     }
 
     /**
